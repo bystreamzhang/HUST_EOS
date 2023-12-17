@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 	fb_draw_line_wide(BUTTON_X + BUTTON_R, BUTTON_Y + BUTTON_R, BUTTON_X + BUTTON_W - BUTTON_R, BUTTON_Y + BUTTON_R, BUTTON_R, PURPLE);
 	fb_update();
 	//
-	fb_draw_text(BUTTON_X + BUTTON_R, BUTTON_Y + BUTTON_FONTSIZE - ((BUTTON_H - BUTTON_FONTSIZE)>>1), "Reset", BUTTON_FONTSIZE, ORANGE);
+	fb_draw_text(BUTTON_X + BUTTON_R-2, BUTTON_Y + BUTTON_FONTSIZE - ((BUTTON_H - BUTTON_FONTSIZE)>>1), "Reset", BUTTON_FONTSIZE, ORANGE);
 	fb_update();
 	
 	//打开多点触摸设备文件, 返回文件fd./dev/input/可能是event0/1/2/3， 可以使用
