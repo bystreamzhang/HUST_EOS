@@ -69,14 +69,11 @@ static void touch_event_cb(int fd)
 			case 4:color = PURPLE;break;
 		}
 		if(x >= BUTTON_X - LINE_R && x < BUTTON_X2 + LINE_R && y >= BUTTON_Y - LINE_R && y < BUTTON_Y2 + LINE_R){
-			if(old[finger].x < BUTTON_X){
-				y = BUTTON_Y2 + LINE_R;
+			if(old[finger].x < BUTTON_X2 + LINE_R){
+				y = BUTTON_Y - LINE_R;
 			} else {
 				x = BUTTON_X2 + LINE_R;
 			}
-			old[finger].x = x;
-			old[finger].y = y;
-			break;
 		}
 		fb_draw_line_wide(old[finger].x, old[finger].y, x, y, LINE_R, color);
 		fb_update();
