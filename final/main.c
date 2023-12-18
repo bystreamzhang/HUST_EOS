@@ -52,6 +52,11 @@ static int bluetooth_fd;
 #define GUESS_W 300
 #define GUESS_H 60
 
+#define RANDOM_X SCREEN_WIDTH/2 - 150
+#define RANDOM_Y SCREEN_HEIGHT/2 + 160
+#define RANDOM_W 300
+#define RANDOM_H 60
+
 #define BUTTON_R_ROLE 30
 #define BUTTON_FONTSIZE_ROLE 54
 
@@ -179,11 +184,15 @@ static void draw_role_buttons(){
 	*/
 	fb_draw_line_wide(DRAW_X + BUTTON_R_ROLE, DRAW_Y + BUTTON_R_ROLE, DRAW_X + DRAW_W - BUTTON_R_ROLE, DRAW_Y + BUTTON_R_ROLE, BUTTON_R_ROLE, BLUE);
 	
-	fb_draw_text(DRAW_X + BUTTON_R_ROLE, DRAW_Y + BUTTON_FONTSIZE_ROLE - ((DRAW_H - BUTTON_FONTSIZE_ROLE)>>1), "You draw", BUTTON_FONTSIZE_ROLE, BLACK);
+	fb_draw_text(DRAW_X + BUTTON_R_ROLE, DRAW_Y + BUTTON_FONTSIZE_ROLE - ((DRAW_H - BUTTON_FONTSIZE_ROLE)>>1), "You draw", BUTTON_FONTSIZE_ROLE, ORANGE);
 	
 	fb_draw_line_wide(GUESS_X + BUTTON_R_ROLE, GUESS_Y + BUTTON_R_ROLE, GUESS_X + GUESS_W - BUTTON_R_ROLE, GUESS_Y + BUTTON_R_ROLE, BUTTON_R_ROLE, BLUE);
 	
-	fb_draw_text(GUESS_X + BUTTON_R_ROLE, GUESS_Y + BUTTON_FONTSIZE_ROLE - ((GUESS_H - BUTTON_FONTSIZE_ROLE)>>1), "You guess", BUTTON_FONTSIZE_ROLE, BLACK);
+	fb_draw_text(GUESS_X + BUTTON_R_ROLE, GUESS_Y + BUTTON_FONTSIZE_ROLE - ((GUESS_H - BUTTON_FONTSIZE_ROLE)>>1), "You guess", BUTTON_FONTSIZE_ROLE, ORANGE);
+	
+	fb_draw_line_wide(RANDOM_X + BUTTON_R_ROLE, RANDOM_Y + BUTTON_R_ROLE, RANDOM_X + RANDOM_W - BUTTON_R_ROLE, RANDOM_Y + BUTTON_R_ROLE, BUTTON_R_ROLE, BLUE);
+	
+	fb_draw_text(RANDOM_X + BUTTON_R_ROLE, RANDOM_Y + BUTTON_FONTSIZE_ROLE - ((RANDOM_H - BUTTON_FONTSIZE_ROLE)>>1), "Rand role", BUTTON_FONTSIZE_ROLE, ORANGE);
 	
 	fb_update();
 }
@@ -435,7 +444,6 @@ static void bluetooth_tty_event_cb(int fd)
 			}else{
 				clear_line3();
 				fb_draw_text(TEXTFRAME_X+2, pen_y, "Your answer is wrong!", 24, ORANGE);
-				
 				fb_update();
 			}
 			break;
@@ -467,7 +475,10 @@ static void touch_event_cb(int fd)
 	if(role == -1){
 		if(type != TOUCH_PRESS )return;
 		//printf("type=%d,x=%d,y=%d,finger=%d\n",type,x,y,finger);
-		if((x>=DRAW_X)&&(x<DRAW_X+DRAW_W)&&(y>=DRAW_Y)&&(y<DRAW_Y+DRAW_H)) {
+		if((x>=RANDOM_X)&&(x<RANDOM_X+RANDOM_W)&&(y>=RANDOM_Y)&&(y<RANDOM_Y+RANDOM_H)) {
+			role = rand()%2+1;
+		}
+		if((role == 1) || ( (x>=DRAW_X)&&(x<DRAW_X+DRAW_W)&&(y>=DRAW_Y)&&(y<DRAW_Y+DRAW_H) )) {
 			role = 1;
 			printf("you chose to draw (you are role 1).\n");
 			sprintf(bstr, "0 2 \n"); // first 0 means switching role, second 2 means the opposite role
@@ -476,7 +487,7 @@ static void touch_event_cb(int fd)
 			myWrite_nonblock(bluetooth_fd, bstr, 5);
 			return;
 		}
-		if((x>=GUESS_X)&&(x<GUESS_X+GUESS_W)&&(y>=GUESS_Y)&&(y<GUESS_Y+GUESS_H)) {
+		if((role == 2) || ( (x>=GUESS_X)&&(x<GUESS_X+GUESS_W)&&(y>=GUESS_Y)&&(y<GUESS_Y+GUESS_H) )) {
 			role = 2;
 			printf("you chose to guess (you are role 2).\n");
 			sprintf(bstr, "0 1 \n");
@@ -485,6 +496,7 @@ static void touch_event_cb(int fd)
 			myWrite_nonblock(bluetooth_fd, bstr, 5);
 			return;
 		}
+		
 		return;
 	}
 	switch(type){
@@ -501,6 +513,10 @@ static void touch_event_cb(int fd)
 				}else {
 					//speak
 					pcm_info_st pcm_info;
+					clear_line3();
+					fb_draw_text(TEXTFRAME_X+2, pen_y, "Recording...", 24, PURPLE);
+					fb_update();
+					
 					uint8_t *pcm_buf = audio_record(3000, &pcm_info); //录3秒音频
 
 					if(pcm_info.sampleRate != PCM_SAMPLE_RATE) { //实际录音采用率不满足要求时 resample
@@ -511,7 +527,10 @@ static void touch_event_cb(int fd)
 
 					pcm_write_wav_file(pcm_buf, &pcm_info, "/tmp/test.wav");
 					printf("write wav end\n");
-
+					clear_line3();
+					fb_draw_text(TEXTFRAME_X+2, pen_y, "Waiting for reply...", 24, ORANGE);
+					fb_update();
+					
 					pcm_free_buf(pcm_buf);
 
 					char *rev = send_to_vosk_server("/tmp/test.wav");
