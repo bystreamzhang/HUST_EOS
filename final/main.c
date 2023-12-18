@@ -34,6 +34,8 @@ static int bluetooth_fd;
 #define TIME_Y	0
 #define TIME_W	38
 #define TIME_H	30
+#define TIME 150
+
 
 #define TEXTFRAME_X	0
 #define TEXTFRAME_Y	0
@@ -71,8 +73,8 @@ static struct point{
 	int x, y;
 }old[5];
 
-char* words[] = {"华科","大学","小心翼翼","心脏","翅膀","狗","猫","兔子","牛","牛奶","橙子","监狱","睡觉","床","被子","洗澡","电脑","熬夜","手机","手心","投降","游戏","尖叫","逃跑","拥抱","种植","玫瑰","盆栽","肥料"};
-#define WORDS_LEN 29
+char* words[] = {"华科","大学","小心翼翼","心脏","翅膀","狗","猫","兔子","牛","牛奶","监狱","睡觉","床","被子","洗澡","电脑","熬夜","手机","手心","投降","游戏","尖叫","逃跑","拥抱","种植","玫瑰","盆栽","肥料"};
+#define WORDS_LEN 28
 
 static int role; // -1: none	1:drawer	2:guesser
 
@@ -232,7 +234,7 @@ static void draw_textframe(){
 	
 }
 
-static int timer=300;
+static int timer=TIME;
 
 static void draw_timer(){
 	char buf[10];
@@ -285,7 +287,7 @@ static void timer_cb(int period) /*该函数1秒执行一次*/
 			fb_update();
 			guessing = 0;
 			role = -1;
-			timer = 300;
+			timer = TIME;
 			draw_role_buttons();
 			return;
 		}
@@ -301,7 +303,7 @@ static void init_game(){
 	guessing = 0;
 	color_index = 0;
 	eraser = 0;
-	timer = 300;
+	timer = TIME;
 	for(int i=0;i<WORDS_LEN;i++)	used[i] = 0;
 	draw_background();
 	draw_role_buttons();
@@ -407,7 +409,7 @@ static void bluetooth_tty_event_cb(int fd)
 					update_score();
 					guessing = 0;
 					role = -1;
-					timer = 300;
+					timer = TIME;
 					draw_role_buttons();
 					sprintf(bstr, "4 0 \n");
 					myWrite_nonblock(bluetooth_fd, bstr, 5);
@@ -426,14 +428,12 @@ static void bluetooth_tty_event_cb(int fd)
 				guessing = 0;
 				role = -1;
 				clear_line3();
-				fb_draw_text(TEXTFRAME_X+2, pen_y, "Said: ", 24, COLOR_TEXT);
-				fb_draw_text(TEXTFRAME_X+2+6*11, pen_y, sword, 24, ORANGE);
-				fb_draw_text(TEXTFRAME_X+2+(6+strlen(sword))*11, pen_y, ",NICE!", 24, GREEN);
+				fb_draw_text(TEXTFRAME_X+2, pen_y, "Your answer is right!", 24, GREEN);
 				fb_update();
-				timer = 300;
+				timer = TIME;
 				draw_role_buttons();
 			}else{
-				fb_draw_rect(TEXTFRAME_X+2, pen_y-30, TEXTFRAME_W-2, pen_y, COLOR_BACKGROUND);
+				clear_line3();
 				fb_draw_text(TEXTFRAME_X+2, pen_y, "Your answer is wrong!", 24, ORANGE);
 				
 				fb_update();
