@@ -60,15 +60,15 @@ static int bluetooth_fd;
 #define BUTTON_R_ROLE 30
 #define BUTTON_FONTSIZE_ROLE 54
 
-#define BUTTON_W_RESET 180
-#define BUTTON_H_RESET 60
-#define BUTTON_R_RESET 30
-#define BUTTON_X_RESET 10
-#define BUTTON_Y_RESET 530
+#define BUTTON_W_CLEAR 180
+#define BUTTON_H_CLEAR 60
+#define BUTTON_R_CLEAR 30
+#define BUTTON_X_CLEAR 10
+#define BUTTON_Y_CLEAR 530
 
-#define BUTTON_X2_RESET 190
-#define BUTTON_Y2_RESET 590
-#define BUTTON_FONTSIZE_RESET 54
+#define BUTTON_X2_CLEAR 190
+#define BUTTON_Y2_CLEAR 590
+#define BUTTON_FONTSIZE_CLEAR 54
 
 #define TOOL_SIZE 64
 
@@ -121,16 +121,16 @@ static void draw_background(){
 	return;
 }
 
-static void draw_reset_button(){
-	fb_draw_line_wide(BUTTON_X_RESET + BUTTON_R_RESET, BUTTON_Y_RESET + BUTTON_R_RESET, BUTTON_X_RESET + BUTTON_W_RESET - BUTTON_R_RESET, BUTTON_Y_RESET + BUTTON_R_RESET, BUTTON_R_RESET, PURPLE);
-	fb_draw_text(BUTTON_X_RESET + BUTTON_R_RESET-2, BUTTON_Y_RESET + BUTTON_FONTSIZE_RESET - ((BUTTON_H_RESET - BUTTON_FONTSIZE_RESET)>>1), "Reset", BUTTON_FONTSIZE_RESET, ORANGE);
+static void draw_clear_button(){
+	fb_draw_line_wide(BUTTON_X_CLEAR + BUTTON_R_CLEAR, BUTTON_Y_CLEAR + BUTTON_R_CLEAR, BUTTON_X_CLEAR + BUTTON_W_CLEAR - BUTTON_R_CLEAR, BUTTON_Y_CLEAR + BUTTON_R_CLEAR, BUTTON_R_CLEAR, PURPLE);
+	fb_draw_text(BUTTON_X_CLEAR + BUTTON_R_CLEAR-2, BUTTON_Y_CLEAR + BUTTON_FONTSIZE_CLEAR - ((BUTTON_H_CLEAR - BUTTON_FONTSIZE_CLEAR)>>1), "Clear", BUTTON_FONTSIZE_CLEAR, ORANGE);
 	fb_update();
 	return;
 }
 
 static void draw_speak_button(){
-	fb_draw_line_wide(BUTTON_X_RESET + BUTTON_R_RESET, BUTTON_Y_RESET + BUTTON_R_RESET, BUTTON_X_RESET + BUTTON_W_RESET - BUTTON_R_RESET, BUTTON_Y_RESET + BUTTON_R_RESET, BUTTON_R_RESET, BLUE);
-	fb_draw_text(BUTTON_X_RESET + BUTTON_R_RESET-2, BUTTON_Y_RESET + BUTTON_FONTSIZE_RESET - ((BUTTON_H_RESET - BUTTON_FONTSIZE_RESET)>>1), "Speak", BUTTON_FONTSIZE_RESET, ORANGE);
+	fb_draw_line_wide(BUTTON_X_CLEAR + BUTTON_R_CLEAR, BUTTON_Y_CLEAR + BUTTON_R_CLEAR, BUTTON_X_CLEAR + BUTTON_W_CLEAR - BUTTON_R_CLEAR, BUTTON_Y_CLEAR + BUTTON_R_CLEAR, BUTTON_R_CLEAR, BLUE);
+	fb_draw_text(BUTTON_X_CLEAR + BUTTON_R_CLEAR-2, BUTTON_Y_CLEAR + BUTTON_FONTSIZE_CLEAR - ((BUTTON_H_CLEAR - BUTTON_FONTSIZE_CLEAR)>>1), "Speak", BUTTON_FONTSIZE_CLEAR, ORANGE);
 	fb_update();
 	return;
 }
@@ -144,32 +144,32 @@ static void draw_tools(){
 	fb_free_image(img);	
 	*/
 	img = fb_read_png_image("./color-palette.png");
-	fb_draw_image(6,BUTTON_Y_RESET - TOOL_SIZE,img,0);
+	fb_draw_image(6,BUTTON_Y_CLEAR - TOOL_SIZE,img,0);
 	fb_update();
 	fb_free_image(img);	
 	img = fb_read_png_image("./eraser.png");
-	fb_draw_image(6,BUTTON_Y_RESET - (TOOL_SIZE<<1),img,0);
+	fb_draw_image(6,BUTTON_Y_CLEAR - (TOOL_SIZE<<1),img,0);
 	fb_update();
 	fb_free_image(img);	
 }
 
 static void clear_usingtoolframe(){
 	if(eraser){
-		fb_draw_border(6, BUTTON_Y_RESET - (TOOL_SIZE<<1), TOOL_SIZE, TOOL_SIZE, WHITE);
+		fb_draw_border(6, BUTTON_Y_CLEAR - (TOOL_SIZE<<1), TOOL_SIZE, TOOL_SIZE, WHITE);
 		return;
 	}
-	fb_draw_border(6, BUTTON_Y_RESET - TOOL_SIZE, TOOL_SIZE, TOOL_SIZE, WHITE);
+	fb_draw_border(6, BUTTON_Y_CLEAR - TOOL_SIZE, TOOL_SIZE, TOOL_SIZE, WHITE);
 	fb_update();
 	return;
 }
 
 static void draw_usingtoolframe(){
 	if(eraser){
-		fb_draw_border(6, BUTTON_Y_RESET - (TOOL_SIZE<<1), TOOL_SIZE, TOOL_SIZE, BLACK);
+		fb_draw_border(6, BUTTON_Y_CLEAR - (TOOL_SIZE<<1), TOOL_SIZE, TOOL_SIZE, BLACK);
 		return;
 	}
 	int color = get_color(0);
-	fb_draw_border(6, BUTTON_Y_RESET - TOOL_SIZE, TOOL_SIZE, TOOL_SIZE, color);
+	fb_draw_border(6, BUTTON_Y_CLEAR - TOOL_SIZE, TOOL_SIZE, TOOL_SIZE, color);
 	fb_update();
 	return;
 }
@@ -179,7 +179,7 @@ static void draw_role_buttons(){
 	fb_draw_line_wide(BUTTON_X + BUTTON_R, BUTTON_Y + BUTTON_R, BUTTON_X + BUTTON_W - BUTTON_R, BUTTON_Y + BUTTON_R, BUTTON_R, PURPLE);
 	fb_update();
 	//
-	fb_draw_text(BUTTON_X + BUTTON_R, BUTTON_Y + BUTTON_FONTSIZE - ((BUTTON_H - BUTTON_FONTSIZE)>>1), "Reset", BUTTON_FONTSIZE, ORANGE);
+	fb_draw_text(BUTTON_X + BUTTON_R, BUTTON_Y + BUTTON_FONTSIZE - ((BUTTON_H - BUTTON_FONTSIZE)>>1), "Clear", BUTTON_FONTSIZE, ORANGE);
 	fb_update();
 	*/
 	fb_draw_line_wide(DRAW_X + BUTTON_R_ROLE, DRAW_Y + BUTTON_R_ROLE, DRAW_X + DRAW_W - BUTTON_R_ROLE, DRAW_Y + BUTTON_R_ROLE, BUTTON_R_ROLE, BLUE);
@@ -325,7 +325,7 @@ static void init_game(){
 
 static void draw_role1(){
 	draw_background();			
-	draw_reset_button();
+	draw_clear_button();
 	draw_textframe();
 	draw_tools();
 	draw_usingtoolframe();
@@ -377,7 +377,7 @@ static void bluetooth_tty_event_cb(int fd)
 			else	printf("warning : you received a invalid message.\n");
 			break;
 		case 1:
-			// reset. the receiver must be guesser, no need to draw the reset button.
+			// clear. the receiver must be guesser, no need to draw the clear button.
 			fb_draw_rect(0,0,SCREEN_WIDTH,SCREEN_HEIGHT,COLOR_BACKGROUND);
 			draw_speak_button();
 			draw_textframe();
@@ -503,9 +503,9 @@ static void touch_event_cb(int fd)
 		case TOUCH_PRESS:
 			//printf("type=%d,x=%d,y=%d,finger=%d\n",type,x,y,finger);
 			
-			if(x >= BUTTON_X_RESET - LINE_R && x < BUTTON_X2_RESET + LINE_R && y >= BUTTON_Y_RESET && y < BUTTON_Y2_RESET + LINE_R){
+			if(x >= BUTTON_X_CLEAR - LINE_R && x < BUTTON_X2_CLEAR + LINE_R && y >= BUTTON_Y_CLEAR && y < BUTTON_Y2_CLEAR + LINE_R){
 				if(role == 1){
-					//reset
+					//clear
 					draw_role1();
 					
 					sprintf(bstr, "1\n");
@@ -548,7 +548,7 @@ static void touch_event_cb(int fd)
 				break;
 			}
 			
-			if(x >= 0 && x < TOOL_SIZE + LINE_R && y >= BUTTON_Y_RESET - TOOL_SIZE && y < BUTTON_Y_RESET){
+			if(x >= 0 && x < TOOL_SIZE + LINE_R && y >= BUTTON_Y_CLEAR - TOOL_SIZE && y < BUTTON_Y_CLEAR){
 				// color-palette
 				clear_usingtoolframe();
 				if(eraser)
@@ -560,7 +560,7 @@ static void touch_event_cb(int fd)
 				myWrite_nonblock(bluetooth_fd, bstr, 5);
 				break;
 			}
-			if(x >= 0 && x < TOOL_SIZE + LINE_R && y >= BUTTON_Y_RESET - (TOOL_SIZE<<1) - LINE_R && y < BUTTON_Y_RESET - TOOL_SIZE){
+			if(x >= 0 && x < TOOL_SIZE + LINE_R && y >= BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - LINE_R && y < BUTTON_Y_CLEAR - TOOL_SIZE){
 				// eraser
 				clear_usingtoolframe();
 				eraser ^= 1;
@@ -597,27 +597,27 @@ static void touch_event_cb(int fd)
 					x = TEXTFRAME_X + TEXTFRAME_W + LINE_R;
 				}
 			}else
-			if(x >= 0 && x < TOOL_SIZE + LINE_R && y >= BUTTON_Y_RESET - (TOOL_SIZE<<1) - LINE_R && y < BUTTON_Y_RESET - TOOL_SIZE){
+			if(x >= 0 && x < TOOL_SIZE + LINE_R && y >= BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - LINE_R && y < BUTTON_Y_CLEAR - TOOL_SIZE){
 				if(old[finger].x < TOOL_SIZE + LINE_R){
-					y = BUTTON_Y_RESET - (TOOL_SIZE<<1) - LINE_R;
+					y = BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - LINE_R;
 				} else {
 					x = TOOL_SIZE + LINE_R;
 				}
 				
 			}else
-			if(x >= 0 && x < TOOL_SIZE + LINE_R && y >= BUTTON_Y_RESET - TOOL_SIZE && y < BUTTON_Y_RESET){
+			if(x >= 0 && x < TOOL_SIZE + LINE_R && y >= BUTTON_Y_CLEAR - TOOL_SIZE && y < BUTTON_Y_CLEAR){
 			
 				if(old[finger].x < TOOL_SIZE + LINE_R){
-					y = BUTTON_Y_RESET - (TOOL_SIZE<<1) - LINE_R;
+					y = BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - LINE_R;
 				} else {
 					x = TOOL_SIZE + LINE_R;
 				}
 			}else
-			if(x >= BUTTON_X_RESET - LINE_R && x < BUTTON_X2_RESET + LINE_R && y >= BUTTON_Y_RESET - LINE_R && y < BUTTON_Y2_RESET + LINE_R){
-				if(old[finger].x < BUTTON_X2_RESET + LINE_R){
-					y = BUTTON_Y_RESET - LINE_R;
+			if(x >= BUTTON_X_CLEAR - LINE_R && x < BUTTON_X2_CLEAR + LINE_R && y >= BUTTON_Y_CLEAR - LINE_R && y < BUTTON_Y2_CLEAR + LINE_R){
+				if(old[finger].x < BUTTON_X2_CLEAR + LINE_R){
+					y = BUTTON_Y_CLEAR - LINE_R;
 				} else {
-					x = BUTTON_X2_RESET + LINE_R;
+					x = BUTTON_X2_CLEAR + LINE_R;
 				}
 			}
 			
