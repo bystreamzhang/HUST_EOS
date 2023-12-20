@@ -440,7 +440,7 @@ static void timer_cb(int period) /*该函数1秒执行一次*/
 			fb_draw_text(TEXTFRAME_X+2, pen_y, "Time out!", 24, RED);
 			fb_update();
 			guessing = 0;
-			role = -1;
+			role = NO_ROLE;
 			timer = TIME_INIT;
 			draw_role_buttons();
 			return;
@@ -575,7 +575,7 @@ static void bluetooth_tty_event_cb(int fd)
 					score++;
 					update_score();
 					guessing = 0;
-					role = -1;
+					role = NO_ROLE;
 					timer = TIME_INIT;
 					draw_role_buttons();
 					sprintf(bstr, "4 0 \n");
@@ -596,6 +596,7 @@ static void bluetooth_tty_event_cb(int fd)
 					score++;
 					update_score();
 					guessing = 0;
+					draw_textframe();
 					sprintf(bstr, "4 0 \n");
 					myWrite_nonblock(bluetooth_fd, bstr, 5);
 				}else{
@@ -612,7 +613,7 @@ static void bluetooth_tty_event_cb(int fd)
 					score++;
 					update_score();
 					guessing = 0;
-					role = -1;
+					role = NO_ROLE;
 					clear_line3();
 					fb_draw_text(TEXTFRAME_X+2, pen_y, "Your answer is right!", 24, GREEN);
 					fb_update();
@@ -626,7 +627,9 @@ static void bluetooth_tty_event_cb(int fd)
 			}else if(role == BOTH){
 				if(type == 0){
 					score++;
+					guessing = 0;
 					update_score();
+					draw_textframe();
 					clear_line4();
 					fb_draw_text(TEXTFRAME_X+2, pen_y+30, "Your answer is right!", 24, GREEN);
 					fb_update();
@@ -653,7 +656,7 @@ static void bluetooth_tty_event_cb(int fd)
 				line_r_op = x;
 			}
 			else{
-				if(eraser)
+				if(eraser_op)
 					eraser_op = 0;
 				color_index_op = type;
 			}
