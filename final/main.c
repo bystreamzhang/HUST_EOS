@@ -129,6 +129,32 @@ int get_color(int finger){
 	return color;
 }
 
+int get_color_real(int finger){
+	// do not consider the eraser
+	int color=ORANGE;
+	if(finger != 0)
+		switch((finger+color_index)%7){
+			case 0:color = ORANGE;break;
+			case 1:color = YELLOW;break;
+			case 2:color = GREEN;break;
+			case 3:color = CYAN;break;
+			case 4:color = PURPLE;break;
+			case 5:color = RED;break;
+			case 6:color = BLACK;break;
+		}
+	else 
+		switch(color_index){
+			case 0:color = ORANGE;break;
+			case 1:color = YELLOW;break;
+			case 2:color = GREEN;break;
+			case 3:color = CYAN;break;
+			case 4:color = PURPLE;break;
+			case 5:color = RED;break;
+			case 6:color = BLACK;break;
+		}
+	return color;
+}
+
 int get_color_op(int finger){
 	int color=ORANGE;
 	if(eraser_op)
@@ -199,30 +225,44 @@ static void draw_tools(){
 	fb_free_image(img);	
 	img = fb_read_png_image("./size.png");
 	fb_draw_image(6,BUTTON_Y_CLEAR - (TOOL_SIZE*3),img,0);
-	fb_draw_circle(6+(TOOL_SIZE>>1), BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - (TOOL_SIZE>>1), line_r, get_color(0));
+	fb_draw_circle(6+(TOOL_SIZE>>1), BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - (TOOL_SIZE>>1), line_r, get_color_real(0));
 	fb_update();
 	fb_free_image(img);	
 }
 
 static void update_sizetool(){
-	fb_draw_circle(6+(TOOL_SIZE>>1), BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - (TOOL_SIZE>>1), line_r, WHITE);
-	line_r <<= 1;
-	if(line_r > 32)
-		line_r = 2;
-	fb_draw_circle(6+(TOOL_SIZE>>1), BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - (TOOL_SIZE>>1), line_r, get_color(0));
+	fb_draw_circle(6+(TOOL_SIZE>>1), BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - (TOOL_SIZE>>1), line_r, get_color_real(0));
 	if(line_r == 32){
 			fb_image *img;
 			img = fb_read_png_image("./size.png");
 			fb_draw_image(6,BUTTON_Y_CLEAR - (TOOL_SIZE*3),img,0);
-			fb_draw_circle(6+(TOOL_SIZE>>1), BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - (TOOL_SIZE>>1), line_r, get_color(0));
 			fb_free_image(img);	
 	}
 	fb_update();
 }
 
+static void change_line_r(){
+	fb_draw_circle(6+(TOOL_SIZE>>1), BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - (TOOL_SIZE>>1), line_r, WHITE);
+	fb_update();
+	if(line_r == 32){
+			fb_image *img;
+			img = fb_read_png_image("./size.png");
+			fb_draw_image(6,BUTTON_Y_CLEAR - (TOOL_SIZE*3),img,0);
+			fb_update();
+			fb_free_image(img);	
+	}	
+	line_r <<= 1;
+	if(line_r > 32)
+	line_r = 2;
+	update_sizetool();
+}
+
+
+
 static void clear_usingtoolframe(){
 	if(eraser){
 		fb_draw_border(6, BUTTON_Y_CLEAR - (TOOL_SIZE<<1), TOOL_SIZE, TOOL_SIZE, WHITE);
+		fb_update();
 		return;
 	}
 	fb_draw_border(6, BUTTON_Y_CLEAR - TOOL_SIZE, TOOL_SIZE, TOOL_SIZE, WHITE);
@@ -233,6 +273,7 @@ static void clear_usingtoolframe(){
 static void draw_usingtoolframe(){
 	if(eraser){
 		fb_draw_border(6, BUTTON_Y_CLEAR - (TOOL_SIZE<<1), TOOL_SIZE, TOOL_SIZE, BLACK);
+		fb_update();
 		return;
 	}
 	int color = get_color(0);
@@ -242,13 +283,6 @@ static void draw_usingtoolframe(){
 }
 
 static void draw_role_buttons(){
-	/*
-	fb_draw_line_wide(BUTTON_X + BUTTON_R, BUTTON_Y + BUTTON_R, BUTTON_X + BUTTON_W - BUTTON_R, BUTTON_Y + BUTTON_R, BUTTON_R, PURPLE);
-	fb_update();
-	//
-	fb_draw_text(BUTTON_X + BUTTON_R, BUTTON_Y + BUTTON_FONTSIZE - ((BUTTON_H - BUTTON_FONTSIZE)>>1), "Clear", BUTTON_FONTSIZE, ORANGE);
-	fb_update();
-	*/
 	fb_draw_line_wide(DRAW_X + BUTTON_R_ROLE, DRAW_Y + BUTTON_R_ROLE, DRAW_X + DRAW_W - BUTTON_R_ROLE, DRAW_Y + BUTTON_R_ROLE, BUTTON_R_ROLE, BLUE);
 	fb_draw_text(DRAW_X + BUTTON_R_ROLE, DRAW_Y + BUTTON_FONTSIZE_ROLE - ((DRAW_H - BUTTON_FONTSIZE_ROLE)>>1), "You draw", BUTTON_FONTSIZE_ROLE, ORANGE);
 	
@@ -347,10 +381,13 @@ static void draw_timer(){
 	sprintf(buf, "%d", timer);
 	fb_draw_rect(TIME_X, TIME_Y, TIME_W, TIME_H, COLOR_BACKGROUND);
 	fb_draw_border(TIME_X, TIME_Y, TIME_W, TIME_H, COLOR_TEXT);
-	if(role != BOTH)
-		fb_draw_text(TIME_X-90, TIME_Y+20, "倒计时:", 24, COLOR_TEXT);
-	else
+	if(role == BOTH){
 		fb_draw_text(TIME_X-90, TIME_Y+20, "无限时 ", 24, COLOR_TEXT);
+		fb_draw_text(TIME_X+2, TIME_Y+20, "999", 24, BLUE);
+		fb_update();
+		return;
+	}
+	fb_draw_text(TIME_X-90, TIME_Y+20, "倒计时:", 24, COLOR_TEXT);
 	if(timer > 60)
 		fb_draw_text(TIME_X+2, TIME_Y+20, buf, 24, BLUE);
 	else if(timer > 10)
@@ -760,7 +797,7 @@ static void touch_event_cb(int fd)
 			}
 			if(x >= 0 && x < TOOL_SIZE + line_r && y >= BUTTON_Y_CLEAR - (TOOL_SIZE*3) - line_r && y < BUTTON_Y_CLEAR - (TOOL_SIZE<<1)){
 				// change size
-				update_sizetool();
+				change_line_r();
 
 				sprintf(bstr, "5 -2 %d\n", line_r);
 				myWrite_nonblock(bluetooth_fd, bstr, 8);
