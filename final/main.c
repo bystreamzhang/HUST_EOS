@@ -596,7 +596,11 @@ static void bluetooth_tty_event_cb(int fd)
 					score++;
 					update_score();
 					guessing = 0;
-					draw_textframe();
+					draw_role1();
+					fb_draw_text(TEXTFRAME_X+2, pen_y, "OP Said: ", 24, COLOR_TEXT);
+					fb_draw_text(TEXTFRAME_X+2+9*11, pen_y, sword, 24, ORANGE);
+					fb_draw_text(TEXTFRAME_X+2+(9+strlen(sword))*11, pen_y, ",NICE!", 24, GREEN);
+					fb_update();
 					sprintf(bstr, "4 0 \n");
 					myWrite_nonblock(bluetooth_fd, bstr, 5);
 				}else{
