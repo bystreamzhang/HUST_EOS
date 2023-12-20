@@ -199,24 +199,30 @@ static void draw_tools(){
 	fb_free_image(img);	
 	img = fb_read_png_image("./size.png");
 	fb_draw_image(6,BUTTON_Y_CLEAR - (TOOL_SIZE*3),img,0);
-	fb_draw_circle(6+(TOOL_SIZE>>1), BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - (TOOL_SIZE>>1), LINE_R, get_color(0));
+	fb_draw_circle(6+(TOOL_SIZE>>1), BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - (TOOL_SIZE>>1), line_r, get_color(0));
 	fb_update();
 	fb_free_image(img);	
 }
 
 static void update_sizetool(){
-	fb_draw_circle(6+(TOOL_SIZE>>1), BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - (TOOL_SIZE>>1), LINE_R, WHITE);
-	LINE_R += 4;
-	if(LINE_R > 20)
-		LINE_R = 4;
-	fb_draw_circle(6+(TOOL_SIZE>>1), BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - (TOOL_SIZE>>1), LINE_R, get_color(0));
+	fb_draw_circle(6+(TOOL_SIZE>>1), BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - (TOOL_SIZE>>1), line_r, WHITE);
+	line_r <<= 1;
+	if(line_r > 32)
+		line_r = 2;
+	fb_draw_circle(6+(TOOL_SIZE>>1), BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - (TOOL_SIZE>>1), line_r, get_color(0));
+	if(line_r == 32){
+			img = fb_read_png_image("./size.png");
+			fb_draw_image(6,BUTTON_Y_CLEAR - (TOOL_SIZE*3),img,0);
+			fb_draw_circle(6+(TOOL_SIZE>>1), BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - (TOOL_SIZE>>1), line_r, get_color(0));
+			fb_free_image(img);	
+	}
 	fb_update();
 }
 
 static void update_sizetool_op(){
-	line_r_op += 4;
-	if(line_r_op > 20)
-		line_r_op = 4;
+	line_r_op <<= 1;
+	if(line_r_op > 32)
+		line_r_op = 2;
 }
 
 static void clear_usingtoolframe(){
@@ -286,7 +292,14 @@ static void draw_textframe(){
 		if(!guessing){
 			guessing = 1;
 			ra = rand()%WORDS_LEN;
-			while(used[ra])	ra = (ra+1)%WORDS_LEN;
+			int cnt = 0;
+			while(used[ra]){
+				if(cnt == WORDS_LEN){
+					for(int i=0;i<WORDS_LEN;i++)	used[i] = 0;
+				}
+				ra = (ra+1)%WORDS_LEN;
+				cnt++;
+			}
 			used[ra] = 1;
 			sprintf(bstr, "6 %d \n", ra); 
 			myWrite_nonblock(bluetooth_fd, bstr, 10);
@@ -325,7 +338,10 @@ static void draw_textframe(){
 		fb_update();
 	}else printf("invalid call: draw_textframe().\n");
 	pen_y+=30;
-	fb_draw_border(TEXTFRAME_X, TEXTFRAME_Y, TEXTFRAME_W, pen_y+10, CYAN);
+	if(role != BOTH)
+		fb_draw_border(TEXTFRAME_X, TEXTFRAME_Y, TEXTFRAME_W, pen_y+10, CYAN);
+	else 
+		fb_draw_border(TEXTFRAME_X, TEXTFRAME_Y, TEXTFRAME_W, pen_y+30+10, CYAN);
 	fb_update();
 }
 
@@ -356,9 +372,18 @@ static void clear_line3(){
 	fb_update();
 }
 
+static void clear_line4(){
+	fb_draw_rect(TEXTFRAME_X+2, pen_y+30+6-28, TEXTFRAME_W-4, 28, COLOR_BACKGROUND);
+	fb_update();
+}
+
 static void update_score(){
 	char str[20];
-	if(role == 1){
+	if(role == NO_ROLE){
+		printf("invalid call: update_score()\n");
+		return;
+	}
+	if(role == DRAWER || role == BOTH){
 		sprintf(str, "%d", score-1);
 		fb_draw_text(TEXTFRAME_X+2+19*11, PEN_Y_INIT, str, 24, WHITE);
 		sprintf(str, "%d", score);
@@ -399,8 +424,12 @@ static void init_game(){
 	guessing = 0;
 	timer = TIME_INIT;
 	score = 0;
+	line_r = LINE_R_INIT;
+	line_r_op = LINE_R_INIT;
 	color_index = 0;
+	color_index_op = 0;
 	eraser = 0;
+	eraser_op = 0;
 	for(int i=0;i<WORDS_LEN;i++)	used[i] = 0;
 	draw_background();
 	draw_role_buttons();
@@ -410,7 +439,11 @@ static void init_game(){
 
 static void draw_role1(){
 	draw_background();			
-	draw_clear_button();
+	if(role == DRAWER)
+		draw_clear_button();
+	else if(role == BOTH)
+		draw_speak_button();
+	else printf("invalid call: draw_role1.\n");
 	draw_textframe();
 	draw_tools();
 	draw_usingtoolframe();
@@ -451,18 +484,26 @@ static void bluetooth_tty_event_cb(int fd)
 			//sscanf(buf, "%d", &role);
 			role = type;
 			printf("your role is :%d\n",role);
-			if(role == 1){
-				printf("your role is drawer(role 1).\n");
+			if(role == DRAWER){
+				printf("your role is drawer.\n");
 				draw_role1();
 			}	
-			else if(role == 2){
-				printf("your role is guesser(role 2).\n");
+			else if(role == GUESSER){
+				printf("your role is guesser.\n");
 				draw_role2();
 			}
-			else	printf("warning : you received a invalid message.\n");
+			else	if(role == BOTH){
+				printf("your role is drawer and guesser(free mode).\n");
+				draw_role1();
+			}
+			else	printf("warning : you received a invalid message.(case 0)\n");
 			break;
 		case 1:
 			// clear. the receiver must be guesser, no need to draw the clear button.
+			if(role != GUESSER){
+				printf("warning : you received a invalid message.(case 1)\n");
+				break;
+			}
 			fb_draw_rect(0,0,SCREEN_WIDTH,SCREEN_HEIGHT,COLOR_BACKGROUND);
 			draw_speak_button();
 			draw_textframe();
@@ -473,31 +514,31 @@ static void bluetooth_tty_event_cb(int fd)
 			if(type == 0){
 				//sscanf(buf, "%d%d%d", &x, &y, &finger);
 				finger = x2;
-				color = get_color(finger);
-				fb_draw_circle(x, y, LINE_R, color);
+				color = get_color_op(finger);
+				fb_draw_circle(x, y, line_r_op, color);
 				fb_update();
 				
 				break;
 			}else if (type == 1){
 				//sscanf(buf, "%d%d%d%d%d", &x, &y, &x2, &y2, &finger);
-				color = get_color(finger);
-				fb_draw_line_wide(x, y, x2, y2, LINE_R, color);
+				color = get_color_op(finger);
+				fb_draw_line_wide(x, y, x2, y2, line_r_op, color);
 				fb_update();
 				break;
-			}else printf("warning : you received a invalid message.\n");
+			}else printf("warning : you received a invalid message.(case 2)\n");
 			break;
 		case 3:
 			// speak
 			sscanf(buf, "%d %s\n",&event_type, sword);
 			printf("speak word: %s\n", sword);
-			if(role == 1){
+			if(role == DRAWER){
 				clear_line3();
-				fb_draw_text(TEXTFRAME_X+2, pen_y, "Said: ", 24, COLOR_TEXT);
-				fb_draw_text(TEXTFRAME_X+2+6*11, pen_y, sword, 24, ORANGE);
+				fb_draw_text(TEXTFRAME_X+2, pen_y, "OP Said: ", 24, COLOR_TEXT);
+				fb_draw_text(TEXTFRAME_X+2+9*11, pen_y, sword, 24, ORANGE);
 				fb_update();
 				
 				if(strcmp(sword, words[ra])==0){
-					fb_draw_text(TEXTFRAME_X+2+(6+strlen(sword))*11, pen_y, ",NICE!", 24, GREEN);
+					fb_draw_text(TEXTFRAME_X+2+(9+strlen(sword))*11, pen_y, ",NICE!", 24, GREEN);
 					fb_update();
 					score++;
 					update_score();
@@ -511,47 +552,85 @@ static void bluetooth_tty_event_cb(int fd)
 					sprintf(bstr, "4 1 \n");
 					myWrite_nonblock(bluetooth_fd, bstr, 5);
 				}
-			}
+			}else if(role == BOTH){
+				clear_line3();
+				fb_draw_text(TEXTFRAME_X+2, pen_y, "OP Said: ", 24, COLOR_TEXT);
+				fb_draw_text(TEXTFRAME_X+2+9*11, pen_y, sword, 24, ORANGE);
+				fb_update();
+				
+				if(strcmp(sword, words[ra])==0){
+					fb_draw_text(TEXTFRAME_X+2+(9+strlen(sword))*11, pen_y, ",NICE!", 24, GREEN);
+					fb_update();
+					score++;
+					update_score();
+					guessing = 0;
+					sprintf(bstr, "4 0 \n");
+					myWrite_nonblock(bluetooth_fd, bstr, 5);
+				}else{
+					sprintf(bstr, "4 1 \n");
+					myWrite_nonblock(bluetooth_fd, bstr, 5);
+				}
+			}else printf("warning : you received a invalid message.(case 3)\n");
 			break;
 		case 4:
 			//reply
 			//sscanf(buf, "%d", &type);
-			if(type == 0){
-				score++;
-				update_score();
-				guessing = 0;
-				role = -1;
-				clear_line3();
-				fb_draw_text(TEXTFRAME_X+2, pen_y, "Your answer is right!", 24, GREEN);
-				fb_update();
-				timer = TIME_INIT;
-				draw_role_buttons();
-			}else{
-				clear_line3();
-				fb_draw_text(TEXTFRAME_X+2, pen_y, "Your answer is wrong!", 24, ORANGE);
-				fb_update();
+			if(role == GUESSER){
+				if(type == 0){
+					score++;
+					update_score();
+					guessing = 0;
+					role = -1;
+					clear_line3();
+					fb_draw_text(TEXTFRAME_X+2, pen_y, "Your answer is right!", 24, GREEN);
+					fb_update();
+					timer = TIME_INIT;
+					draw_role_buttons();
+				}else{
+					clear_line3();
+					fb_draw_text(TEXTFRAME_X+2, pen_y, "Your answer is wrong!", 24, ORANGE);
+					fb_update();
+				}
+			}else if(role == BOTH){
+				if(type == 0){
+					score++;
+					update_score();
+					clear_line4();
+					fb_draw_text(TEXTFRAME_X+2, pen_y+30, "Your answer is right!", 24, GREEN);
+					fb_update();
+				}else{
+					clear_line4();
+					fb_draw_text(TEXTFRAME_X+2, pen_y+30, "Your answer is wrong!", 24, ORANGE);
+					fb_update();
+				}
 			}
+			else printf("warning : you received a invalid message.(case 4)\n");
+			
 			break;
 		case 5:
-			//change tool, only the guesser may receive this message
+			//change the op tool
+			if(role == DRAWER){
+				printf("warning : you received a invalid message.(case 5)\n");
+				break;
+			}
 			if(type == -1){
-				//clear_usingtoolframe();
-				eraser ^= 1;
-				//draw_usingtoolframe();
-			}else (type == -2){
+				eraser_op ^= 1;
+			}
+			else (type == -2){
 				//change size
-				LINE_R = x;
-			
+				line_r_op = x;
 			}else{
-				//clear_usingtoolframe();
 				if(eraser)
-					eraser = 0;
-				color_index = type;
-				//draw_usingtoolframe();
+					eraser_op = 0;
+				color_index_op = type;
 			}
 			break;
 		case 6:
-			used[ra]=1;
+			if(type < 0 || type > WORDS_LEN){
+				printf("warning : you received a invalid message.(case 6)\n");
+				break;
+			}
+			used[type] = 1;
 			break;
 	}
 	
@@ -564,14 +643,14 @@ static void touch_event_cb(int fd)
 	type = touch_read(fd, &x,&y,&finger);
 	int color = COLOR_BACKGROUND;
 	char bstr[132];
-	if(role == -1){
+	if(role == NO_ROLE){
 		if(type != TOUCH_PRESS )return;
 		//printf("type=%d,x=%d,y=%d,finger=%d\n",type,x,y,finger);
 		if((x>=RANDOM_X)&&(x<RANDOM_X+RANDOM_W)&&(y>=RANDOM_Y)&&(y<RANDOM_Y+RANDOM_H)) {
 			role = rand()%2+1;
 		}
-		if((role == 1) || ( (x>=DRAW_X)&&(x<DRAW_X+DRAW_W)&&(y>=DRAW_Y)&&(y<DRAW_Y+DRAW_H) )) {
-			role = 1;
+		if((role == DRAWER) || ( (x>=DRAW_X)&&(x<DRAW_X+DRAW_W)&&(y>=DRAW_Y)&&(y<DRAW_Y+DRAW_H) )) {
+			role = DRAWER;
 			printf("you chose to draw (you are role 1).\n");
 			sprintf(bstr, "0 2 \n"); // first 0 means switching role, second 2 means the opposite role
 			draw_role1();
@@ -579,8 +658,8 @@ static void touch_event_cb(int fd)
 			myWrite_nonblock(bluetooth_fd, bstr, 5);
 			return;
 		}
-		if((role == 2) || ( (x>=GUESS_X)&&(x<GUESS_X+GUESS_W)&&(y>=GUESS_Y)&&(y<GUESS_Y+GUESS_H) )) {
-			role = 2;
+		if((role == GUESSER) || ( (x>=GUESS_X)&&(x<GUESS_X+GUESS_W)&&(y>=GUESS_Y)&&(y<GUESS_Y+GUESS_H) )) {
+			role = GUESSER;
 			printf("you chose to guess (you are role 2).\n");
 			sprintf(bstr, "0 1 \n");
 			draw_role2();
@@ -588,15 +667,23 @@ static void touch_event_cb(int fd)
 			myWrite_nonblock(bluetooth_fd, bstr, 5);
 			return;
 		}
-		
+		if( (x>=FREE_X)&&(x<FREE_X+FREE_W)&&(y>=FREE_Y)&&(y<FREE_Y+FREE_H) ) {
+			role = BOTH;
+			printf("you chose the free mode.\n");
+			sprintf(bstr, "0 3 \n");
+			draw_role1();
+			
+			myWrite_nonblock(bluetooth_fd, bstr, 5);
+			return;
+		}
 		return;
 	}
 	switch(type){
 		case TOUCH_PRESS:
 			//printf("type=%d,x=%d,y=%d,finger=%d\n",type,x,y,finger);
 			
-			if(x >= BUTTON_X_CLEAR - LINE_R && x < BUTTON_X2_CLEAR + LINE_R && y >= BUTTON_Y_CLEAR && y < BUTTON_Y2_CLEAR + LINE_R){
-				if(role == 1){
+			if(x >= BUTTON_X_CLEAR - line_r && x < BUTTON_X2_CLEAR + line_r && y >= BUTTON_Y_CLEAR && y < BUTTON_Y2_CLEAR + line_r){
+				if(role == DRAWER){
 					//clear
 					draw_role1();
 					
@@ -605,10 +692,15 @@ static void touch_event_cb(int fd)
 				}else {
 					//speak
 					pcm_info_st pcm_info;
-					clear_line3();
-					fb_draw_text(TEXTFRAME_X+2, pen_y, "Recording...", 24, PURPLE);
+					if(role == GUESSER){
+						clear_line3();
+						fb_draw_text(TEXTFRAME_X+2, pen_y, "Recording...", 24, PURPLE);
+					}else {
+						clear_line4();
+						fb_draw_text(TEXTFRAME_X+2, pen_y+30, "Recording...", 24, PURPLE);
+					}
 					fb_update();
-					
+
 					uint8_t *pcm_buf = audio_record(3000, &pcm_info); //录3秒音频
 
 					if(pcm_info.sampleRate != PCM_SAMPLE_RATE) { //实际录音采用率不满足要求时 resample
@@ -619,8 +711,14 @@ static void touch_event_cb(int fd)
 
 					pcm_write_wav_file(pcm_buf, &pcm_info, "/tmp/test.wav");
 					printf("write wav end\n");
-					clear_line3();
-					fb_draw_text(TEXTFRAME_X+2, pen_y, "Waiting for reply...", 24, ORANGE);
+
+					if(role == GUESSER){
+						clear_line3();
+						fb_draw_text(TEXTFRAME_X+2, pen_y, "Waiting for reply...", 24, PURPLE);
+					}else {
+						clear_line4();
+						fb_draw_text(TEXTFRAME_X+2, pen_y+30, "Waiting for reply...", 24, PURPLE);
+					}
 					fb_update();
 					
 					pcm_free_buf(pcm_buf);
@@ -635,13 +733,13 @@ static void touch_event_cb(int fd)
 				break;
 			}
 			
-			if(role == 2){
+			if(role == GUESSER){
 				//
 				printf("You cannot draw because you are the guesser.\n");
 				break;
 			}
 			
-			if(x >= 0 && x < TOOL_SIZE + LINE_R && y >= BUTTON_Y_CLEAR - TOOL_SIZE && y < BUTTON_Y_CLEAR){
+			if(x >= 0 && x < TOOL_SIZE + line_r && y >= BUTTON_Y_CLEAR - TOOL_SIZE && y < BUTTON_Y_CLEAR){
 				// color-palette
 				clear_usingtoolframe();
 				if(eraser)
@@ -654,7 +752,7 @@ static void touch_event_cb(int fd)
 				myWrite_nonblock(bluetooth_fd, bstr, 5);
 				break;
 			}
-			if(x >= 0 && x < TOOL_SIZE + LINE_R && y >= BUTTON_Y_CLEAR - (TOOL_SIZE<<1)&& y < BUTTON_Y_CLEAR - TOOL_SIZE){
+			if(x >= 0 && x < TOOL_SIZE + line_r && y >= BUTTON_Y_CLEAR - (TOOL_SIZE<<1)&& y < BUTTON_Y_CLEAR - TOOL_SIZE){
 				// eraser
 				clear_usingtoolframe();
 				eraser ^= 1;
@@ -664,19 +762,24 @@ static void touch_event_cb(int fd)
 				myWrite_nonblock(bluetooth_fd, bstr, 5);
 				break;
 			}
-			if(x >= 0 && x < TOOL_SIZE + LINE_R && y >= BUTTON_Y_CLEAR - (TOOL_SIZE*3) - LINE_R && y < BUTTON_Y_CLEAR - (TOOL_SIZE<<1)){
+			if(x >= 0 && x < TOOL_SIZE + line_r && y >= BUTTON_Y_CLEAR - (TOOL_SIZE*3) - line_r && y < BUTTON_Y_CLEAR - (TOOL_SIZE<<1)){
 				// change size
 				update_sizetool();
 
-				sprintf(bstr, "5 -2 %d\n", LINE_R);
+				sprintf(bstr, "5 -2 %d\n", line_r);
 				myWrite_nonblock(bluetooth_fd, bstr, 8);
 				break;
 			}
-			if(x >= 0 && x < TEXTFRAME_X + TEXTFRAME_W + LINE_R && y >= 0 && y < TEXTFRAME_Y + pen_y + 6 + LINE_R){
-				break;
+			if(role == DRAWER){
+				if(x >= 0 && x < TEXTFRAME_X + TEXTFRAME_W + line_r && y >= 0 && y < TEXTFRAME_Y + pen_y + 6 + line_r)
+					break;
+			}else{
+				if(x >= 0 && x < TEXTFRAME_X + TEXTFRAME_W + line_r && y >= 0 && y < TEXTFRAME_Y + pen_y + 30 + 6 + line_r)
+					break;
 			}
+			
 			color = get_color(finger);
-			fb_draw_circle(x, y, LINE_R, color);
+			fb_draw_circle(x, y, line_r, color);
 			fb_update();
 			old[finger].x = x;
 			old[finger].y = y;
@@ -686,53 +789,56 @@ static void touch_event_cb(int fd)
 			
 		case TOUCH_MOVE:
 			//printf("TOUCH_MOVE：x=%d,y=%d,finger=%d\n",x,y,finger);
-			if(role == 2){
-				//
-				printf("You cannot draw because you are the guesser.\n");
+			if(role == GUESSER){
+				//printf("You cannot draw because you are the guesser.\n");
 				break;
 			}
 			color = get_color(finger);
-			if(x >= 0 && x < TEXTFRAME_X + TEXTFRAME_W + LINE_R && y >= 0 && y < TEXTFRAME_Y + pen_y + 6 + LINE_R){
-				if(old[finger].x < TEXTFRAME_X + TEXTFRAME_W + LINE_R){
-					y = TEXTFRAME_Y + pen_y + 6 + LINE_R;
+			if((role == DRAWER) && (x >= 0 && x < TEXTFRAME_X + TEXTFRAME_W + line_r && y >= 0 && y < TEXTFRAME_Y + pen_y + 6 + line_r)){
+				if(old[finger].x < TEXTFRAME_X + TEXTFRAME_W + line_r){
+					y = TEXTFRAME_Y + pen_y + 6 + line_r;
 				} else {
-					x = TEXTFRAME_X + TEXTFRAME_W + LINE_R;
+					x = TEXTFRAME_X + TEXTFRAME_W + line_r;
 				}
 			}else
-			if(x >= 0 && x < TOOL_SIZE + LINE_R && y >= BUTTON_Y_CLEAR - (TOOL_SIZE*3) - LINE_R && y < BUTTON_Y_CLEAR - (TOOL_SIZE<<1)){
-				if(old[finger].x < TOOL_SIZE + LINE_R){
-					y = BUTTON_Y_CLEAR - (TOOL_SIZE*3) - LINE_R;
+			if((role == BOTH) && (x >= 0 && x < TEXTFRAME_X + TEXTFRAME_W + line_r && y >= 0 && y < TEXTFRAME_Y + pen_y + 30 + 6 + line_r)){
+				if(old[finger].x < TEXTFRAME_X + TEXTFRAME_W + line_r){
+					y = TEXTFRAME_Y + pen_y + 30 + 6 + line_r;
 				} else {
-					x = TOOL_SIZE + LINE_R;
+					x = TEXTFRAME_X + TEXTFRAME_W + line_r;
 				}
-				
 			}else
-			if(x >= 0 && x < TOOL_SIZE + LINE_R && y >= BUTTON_Y_CLEAR - (TOOL_SIZE<<1) && y < BUTTON_Y_CLEAR - TOOL_SIZE){
-				if(old[finger].x < TOOL_SIZE + LINE_R){
-					y = BUTTON_Y_CLEAR - (TOOL_SIZE*3) - LINE_R;
+			if(x >= 0 && x < TOOL_SIZE + line_r && y >= BUTTON_Y_CLEAR - (TOOL_SIZE*3) - line_r && y < BUTTON_Y_CLEAR - (TOOL_SIZE<<1)){
+				if(old[finger].x < TOOL_SIZE + line_r){
+					y = BUTTON_Y_CLEAR - (TOOL_SIZE*3) - line_r;
 				} else {
-					x = TOOL_SIZE + LINE_R;
+					x = TOOL_SIZE + line_r;
 				}
-				
 			}else
-			if(x >= 0 && x < TOOL_SIZE + LINE_R && y >= BUTTON_Y_CLEAR - TOOL_SIZE && y < BUTTON_Y_CLEAR){
+			if(x >= 0 && x < TOOL_SIZE + line_r && y >= BUTTON_Y_CLEAR - (TOOL_SIZE<<1) && y < BUTTON_Y_CLEAR - TOOL_SIZE){
+				if(old[finger].x < TOOL_SIZE + line_r){
+					y = BUTTON_Y_CLEAR - (TOOL_SIZE*3) - line_r;
+				} else {
+					x = TOOL_SIZE + line_r;
+				}
+			}else
+			if(x >= 0 && x < TOOL_SIZE + line_r && y >= BUTTON_Y_CLEAR - TOOL_SIZE && y < BUTTON_Y_CLEAR){
 			
-				if(old[finger].x < TOOL_SIZE + LINE_R){
-					y = BUTTON_Y_CLEAR - (TOOL_SIZE*3) - LINE_R;
+				if(old[finger].x < TOOL_SIZE + line_r){
+					y = BUTTON_Y_CLEAR - (TOOL_SIZE*3) - line_r;
 				} else {
-					x = TOOL_SIZE + LINE_R;
+					x = TOOL_SIZE + line_r;
 				}
 			}else
-			if(x >= BUTTON_X_CLEAR - LINE_R && x < BUTTON_X2_CLEAR + LINE_R && y >= BUTTON_Y_CLEAR - LINE_R && y < BUTTON_Y2_CLEAR + LINE_R){
-				if(old[finger].x < BUTTON_X2_CLEAR + LINE_R){
-					y = BUTTON_Y_CLEAR - LINE_R;
+			if(x >= BUTTON_X_CLEAR - line_r && x < BUTTON_X2_CLEAR + line_r && y >= BUTTON_Y_CLEAR - line_r && y < BUTTON_Y2_CLEAR + line_r){
+				if(old[finger].x < BUTTON_X2_CLEAR + line_r){
+					y = BUTTON_Y_CLEAR - line_r;
 				} else {
-					x = BUTTON_X2_CLEAR + LINE_R;
+					x = BUTTON_X2_CLEAR + line_r;
 				}
 			}
 			
-			
-			fb_draw_line_wide(old[finger].x, old[finger].y, x, y, LINE_R, color);
+			fb_draw_line_wide(old[finger].x, old[finger].y, x, y, line_r, color);
 			fb_update();
 			sprintf(bstr, "2 1 %d %d %d %d %d\n", old[finger].x, old[finger].y, x, y, finger);
 			myWrite_nonblock(bluetooth_fd, bstr, 26);
@@ -758,8 +864,6 @@ static void touch_event_cb(int fd)
 }
 
 
-
-
 static int bluetooth_tty_init(const char *dev)
 {
 	int fd = open(dev, O_RDWR|O_NOCTTY|O_NONBLOCK); /*非阻塞模式*/
@@ -769,7 +873,6 @@ static int bluetooth_tty_init(const char *dev)
 	}
 	return fd;
 }
-
 
 
 int main(int argc, char *argv[])
