@@ -94,11 +94,11 @@ char* words[] = {"华科","大学","小心翼翼","心脏","翅膀","狗","猫",
 #define BOTH 3
 
 static int role; // -1: none	1:drawer	2:guesser	3:both
-static int line_r = LINE_R_INIT
+static int line_r = LINE_R_INIT;
 static int color_index = 0;
 static int eraser = 0;
 
-static int line_r_op = LINE_R_INIT
+static int line_r_op = LINE_R_INIT;
 static int color_index_op = 0;
 static int eraser_op = 0;
 
@@ -163,7 +163,7 @@ static void draw_background(){
 }
 
 static void draw_clear_button(){
-	if(role == both){
+	if(role == BOTH){
 		// in free mode, disable Clear button 
 		printf("Clear button if disabled in free mode!\n");
 		return;
@@ -211,18 +211,13 @@ static void update_sizetool(){
 		line_r = 2;
 	fb_draw_circle(6+(TOOL_SIZE>>1), BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - (TOOL_SIZE>>1), line_r, get_color(0));
 	if(line_r == 32){
+			fb_image *img;
 			img = fb_read_png_image("./size.png");
 			fb_draw_image(6,BUTTON_Y_CLEAR - (TOOL_SIZE*3),img,0);
 			fb_draw_circle(6+(TOOL_SIZE>>1), BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - (TOOL_SIZE>>1), line_r, get_color(0));
 			fb_free_image(img);	
 	}
 	fb_update();
-}
-
-static void update_sizetool_op(){
-	line_r_op <<= 1;
-	if(line_r_op > 32)
-		line_r_op = 2;
 }
 
 static void clear_usingtoolframe(){
@@ -616,10 +611,11 @@ static void bluetooth_tty_event_cb(int fd)
 			if(type == -1){
 				eraser_op ^= 1;
 			}
-			else (type == -2){
+			else if(type == -2){
 				//change size
 				line_r_op = x;
-			}else{
+			}
+			else{
 				if(eraser)
 					eraser_op = 0;
 				color_index_op = type;
