@@ -470,7 +470,13 @@ static void init_game(){
 
 
 static void draw_role1(){
-	draw_background();			
+	if(role == DRAWER){
+		draw_background();	
+	}else{
+		fb_draw_rect(TEXTFRAME_X, TEXTFRAME_Y, TEXTFRAME_W, pen_y+30+10, COLOR_BACKGROUND);
+		fb_update();
+	}
+			
 	if(role == DRAWER)
 		draw_clear_button();
 	else if(role == BOTH)
@@ -633,7 +639,8 @@ static void bluetooth_tty_event_cb(int fd)
 					score++;
 					guessing = 0;
 					update_score();
-					draw_textframe();
+					//draw_textframe();
+					draw_role1();
 					clear_line4();
 					fb_draw_text(TEXTFRAME_X+2, pen_y+30, "Your answer is right!", 24, GREEN);
 					fb_update();
