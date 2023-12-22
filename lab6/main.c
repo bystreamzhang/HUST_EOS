@@ -293,7 +293,7 @@ static void draw_timer(){
 	}
 	char buf[12];
 	sprintf(buf, "%d", timer);
-	printf("timer = %d\n", timer);
+	//printf("timer = %d\n", timer);
 	fb_image *img;
 	img = fb_read_png_image("./time-bar.png");
 	fb_draw_image(TIMEBAR_X,TIMEBAR_Y,img,0);
@@ -528,8 +528,6 @@ static void draw_role2(){
 }
 */
 static void into_next_turn(){
-	score++;
-	update_score();
 	guessing = 0;
 	timer = TIME_INIT;
 	char bstr[20];
@@ -646,6 +644,8 @@ static void bluetooth_tty_event_cb(int fd)
 					fb_draw_text(TEXTFRAME_X+2+(9+strlen(sword))*11, pen_y, ",NICE!", 24, GREEN);
 					fb_update();					
 					*/
+					score++;
+					update_score();
 					draw_drawer_reply("./guess-yes.png");
 					into_next_turn();
 					sprintf(bstr, "4 0 \n");
@@ -690,8 +690,6 @@ static void bluetooth_tty_event_cb(int fd)
 				if(type == 0){
 					score++;
 					update_score();
-					guessing = 0;
-					timer = TIME_INIT;
 					draw_guesser_reply("./guess-yes.png");
 					into_next_turn();
 					/*

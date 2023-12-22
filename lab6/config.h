@@ -59,7 +59,7 @@ static char * send_to_vosk_server(char *file);
 #define TIME_LINE_CIRCLE_X1 770
 #define TIME_LINE_CIRCLE_X2 915
 #define TIME_LINE_CIRCLE_Y 31
-#define TIME_LINE_CIRCLE_R 16
+#define TIME_LINE_CIRCLE_R 15
 
 #define TIME_INIT 145
 
