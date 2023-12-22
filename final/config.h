@@ -64,7 +64,7 @@ static char * send_to_vosk_server(char *file);
 #define TIME_INIT 145
 
 #define HEAD_FONTSIZE 40
-#define DRAW_TOPIC_FONT_X 466
+#define DRAW_TOPIC_FONT_X 391
 #define DRAW_TOPIC_FONT_Y 54
 
 #define GUESS_REPLY_X 367
@@ -74,7 +74,7 @@ static char * send_to_vosk_server(char *file);
 #define REPLY_W 142
 #define REPLY_H 38
 
-#define WORDS_MAX_W 120
+#define WORDS_MAX_W 180
 
 #define SCORE_X 678
 #define SCORE_Y 54
@@ -168,9 +168,11 @@ static void into_image_page();
 
 //static void draw_role2();
 
-static void touch_handle_game(int x, int y);
+static void touch_handle_game(int x, int y, int finger);
 
-static void move_handle_game(x, y, finger);
+static void move_handle_game(int x, int y, int finger);
+
+static void handle_speak();
 
 static void bluetooth_tty_event_cb(int fd);
 

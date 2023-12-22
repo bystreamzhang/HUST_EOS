@@ -130,6 +130,7 @@ static void draw_background(){
 	return;
 }
 
+/*
 static void draw_clear_button(){
 	if(role == BOTH){
 		// in free mode, disable Clear button 
@@ -151,12 +152,6 @@ static void draw_speak_button(){
 
 static void draw_tools(){
 	fb_image *img;
-	/*
-	img = fb_read_png_image("./test.png");
-	fb_draw_image(100,300,img,0);
-	fb_update();
-	fb_free_image(img);	
-	*/
 	img = fb_read_png_image("./color-palette.png");
 	fb_draw_image(6,BUTTON_Y_CLEAR - TOOL_SIZE,img,0);
 	fb_update();
@@ -172,13 +167,15 @@ static void draw_tools(){
 	fb_free_image(img);	
 }
 
+*/
+
 static void update_sizetool(){
-	fb_draw_circle(6+(TOOL_SIZE>>1), BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - (TOOL_SIZE>>1), line_r, get_color_real(0));
+	fb_draw_circle(TOOL_X1 + (TOOL_SIZE>>1), TOOL_Y1 + (TOOL_SIZE>>1), line_r, get_color_real(0));
 	fb_update();
 }
 
 static void change_line_r(){
-	fb_draw_circle(6+(TOOL_SIZE>>1), BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - (TOOL_SIZE>>1), line_r, WHITE);
+	fb_draw_circle(TOOL_X1 + (TOOL_SIZE>>1), TOOL_Y1 + (TOOL_SIZE>>1), line_r, WHITE);
 	fb_update();
 	line_r <<= 1;
 	if(line_r > LINE_R_MAX)
@@ -294,9 +291,9 @@ static void draw_timer(){
 		printf("timer error!\n");
 		return;
 	}
-	char buf[10];
+	char buf[12];
 	sprintf(buf, "%d", timer);
-
+	printf("timer = %d\n", timer);
 	fb_image *img;
 	img = fb_read_png_image("./time-bar.png");
 	fb_draw_image(TIMEBAR_X,TIMEBAR_Y,img,0);
@@ -329,9 +326,9 @@ static void draw_timer(){
 		}
 	}
 
-	fb_draw_line_wide(TIME_LINE_CIRCLE_X1 + timer, TIME_LINE_CIRCLE_Y, TIME_LINE_CIRCLE_X2, TIME_LINE_CIRCLE_Y, TIME_LINE_CIRCLE_R, color);
+	fb_draw_line_wide(TIME_LINE_CIRCLE_X1 + TIME_INIT - timer, TIME_LINE_CIRCLE_Y, TIME_LINE_CIRCLE_X2, TIME_LINE_CIRCLE_Y, TIME_LINE_CIRCLE_R, color);
 	img = fb_read_png_image("./clock.png");
-	fb_draw_image(CLOCK_X + timer, CLOCK_Y, img, 0);
+	fb_draw_image(CLOCK_X + TIME_INIT - timer, CLOCK_Y, img, 0);
 	fb_update();
 	fb_free_image(img);	
 
@@ -434,7 +431,7 @@ static void into_guesser_page(){
 	draw_background();
 	draw_page("./board_guesser.png");
 	char str[20];
-	char bstr[20];
+	
 	draw_guesser_reply("./guess-fighting.png");
 	sprintf(str, "%d", score);
 	fb_draw_text(SCORE_X, SCORE_Y, str, HEAD_FONTSIZE, ORANGE);
@@ -484,6 +481,7 @@ static void timer_cb(int period) /*该函数1秒执行一次*/
 static void into_main_page(){
 	//restart everything from main page
 	draw_background();
+	srand(time(NULL));
 	role = NO_ROLE;
 	guessing = 0;
 	in_image_page = 0;
@@ -496,7 +494,7 @@ static void into_main_page(){
 	eraser = 0;
 	eraser_op = 0;
 	for(int i=0;i<WORDS_LEN;i++)	used[i] = 0;
-	draw_background();
+	draw_page("./main.png");
 
 	printf("The game is ready!\n");
 }
@@ -534,6 +532,7 @@ static void into_next_turn(){
 	update_score();
 	guessing = 0;
 	timer = TIME_INIT;
+	char bstr[20];
 	if((role == DRAWER)) {
 		role = GUESSER;
 		printf("you are guesser.\n");
@@ -589,15 +588,18 @@ static void bluetooth_tty_event_cb(int fd)
 			printf("your role is :%d\n",role);
 			if(role == DRAWER){
 				printf("your role is drawer.\n");
-				draw_role1();
+				//draw_role1();
+				into_drawer_page();
 			}	
 			else if(role == GUESSER){
 				printf("your role is guesser.\n");
-				draw_role2();
+				//draw_role2();
+				into_guesser_page();
 			}
 			else	if(role == BOTH){
 				printf("your role is drawer and guesser.\n");
-				draw_role1();
+				//draw_role1();
+				into_drawer_page();
 			}
 			else	printf("warning : you received a invalid message.(case 0)\n");
 			break;
@@ -794,8 +796,32 @@ int touch_area_game(int x, int y){
 	return TOUCH_INVALID;
 }
 
-static void touch_handle_game(int x, int y){
+static void handle_speak(){
+	char bstr[132];
+	pcm_info_st pcm_info;
+	if(role == GUESSER)
+		draw_guesser_reply("./guess-recording.png");
+	uint8_t *pcm_buf = audio_record(3000, &pcm_info); //录3秒音频
+	if(pcm_info.sampleRate != PCM_SAMPLE_RATE) { //实际录音采用率不满足要求时 resample
+		uint8_t *pcm_buf2 = pcm_s16_mono_resample(pcm_buf, &pcm_info, PCM_SAMPLE_RATE, &pcm_info);
+		pcm_free_buf(pcm_buf);
+		pcm_buf = pcm_buf2;
+	}
+	pcm_write_wav_file(pcm_buf, &pcm_info, "/tmp/test.wav");
+	printf("write wav end\n");
+	if(role == GUESSER)
+		draw_guesser_reply("./guess-waiting.png");		
+	pcm_free_buf(pcm_buf);
+	char *rev = send_to_vosk_server("/tmp/test.wav");
+	printf("recv from server: %s\n", rev);
+	sprintf(bstr, "3 %s\n", rev);
+	myWrite_nonblock(bluetooth_fd, bstr, strlen(bstr));
+}
+
+static void touch_handle_game(int x, int y, int finger){
 	int touch_area = touch_area_game(x,y);
+	int color;
+	char bstr[132];
 	switch (touch_area)
 	{
 		case TOUCH_INVALID:
@@ -844,24 +870,8 @@ static void touch_handle_game(int x, int y){
 			break;
 		case TOUCH_SPEAK:
 			//speak
-			pcm_info_st pcm_info;
-			if(role == GUESSER)
-				draw_guesser_reply("./guess-recording.png");
-			uint8_t *pcm_buf = audio_record(3000, &pcm_info); //录3秒音频
-			if(pcm_info.sampleRate != PCM_SAMPLE_RATE) { //实际录音采用率不满足要求时 resample
-				uint8_t *pcm_buf2 = pcm_s16_mono_resample(pcm_buf, &pcm_info, PCM_SAMPLE_RATE, &pcm_info);
-				pcm_free_buf(pcm_buf);
-				pcm_buf = pcm_buf2;
-			}
-			pcm_write_wav_file(pcm_buf, &pcm_info, "/tmp/test.wav");
-			printf("write wav end\n");
-			if(role == GUESSER)
-				draw_guesser_reply("./guess-waiting.png");		
-			pcm_free_buf(pcm_buf);
-			char *rev = send_to_vosk_server("/tmp/test.wav");
-			printf("recv from server: %s\n", rev);
-			sprintf(bstr, "3 %s\n", rev);
-			myWrite_nonblock(bluetooth_fd, bstr, strlen(bstr));
+			handle_speak();
+			
 			break;
 		case TOUCH_SAVE:
 			printf("Save the picture.\n");
@@ -869,7 +879,7 @@ static void touch_handle_game(int x, int y){
 			break;
 		case TOUCH_EXIT:
 			printf("Exit.\n");
-			init_game();
+			into_main_page();
 			break;
 		default:
 			break;
@@ -877,12 +887,13 @@ static void touch_handle_game(int x, int y){
 			
 }
 
-static void move_handle_game(x, y, finger){
+static void move_handle_game(int x, int y, int finger){
 	if(role == GUESSER){
 		//printf("You cannot draw because you are the guesser.\n");
-		break;
+		return;
 	}
-	color = get_color(finger);
+	char bstr[132];
+	int color = get_color(finger);
 	/*
 	if((role == DRAWER) && (x >= 0 && x < TEXTFRAME_X + TEXTFRAME_W + line_r && y >= 0 && y < TEXTFRAME_Y + pen_y + 6 + line_r)){
 		if(old[finger].x < TEXTFRAME_X + TEXTFRAME_W + line_r){
@@ -981,7 +992,6 @@ static void touch_event_cb(int fd)
 {
 	int type,x,y,finger;
 	type = touch_read(fd, &x,&y,&finger);
-	int color = COLOR_BACKGROUND;
 	char bstr[132];
 	if(in_image_page){
 		
@@ -1049,7 +1059,7 @@ static void touch_event_cb(int fd)
 	switch(type){
 		case TOUCH_PRESS:
 			//printf("type=%d,x=%d,y=%d,finger=%d\n",type,x,y,finger);
-			touch_handle_game(x, y);
+			touch_handle_game(x, y, finger);
 			break;
 			
 		case TOUCH_MOVE:
@@ -1087,7 +1097,7 @@ int main(int argc, char *argv[])
 {
 	fb_init("/dev/fb0");
 	font_init("./font.ttc");
-	srand(time(NULL));
+	
 	audio_record_init(NULL, PCM_SAMPLE_RATE, 1, 16); //单声道，S16采样
 
 	into_main_page();
