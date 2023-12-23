@@ -10,6 +10,12 @@
 #include "audio_util.h"
 #include "config.h"
 
+#include "lpng1639/png.h"
+#include "zlib/zlib.h"
+
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+
 static int touch_fd;
 static int bluetooth_fd;
 
@@ -295,7 +301,7 @@ static void draw_timer(){
 	sprintf(buf, "%d", timer);
 	//printf("timer = %d\n", timer);
 	fb_image *img;
-	img = fb_read_png_image("./time-bar.png");
+	img = fb_read_png_image("./pictures/time-bar.png");
 	fb_draw_image(TIMEBAR_X,TIMEBAR_Y,img,0);
 	fb_update();
 	fb_free_image(img);	
@@ -327,7 +333,7 @@ static void draw_timer(){
 	}
 
 	fb_draw_line_wide(TIME_LINE_CIRCLE_X1 + TIME_INIT - timer, TIME_LINE_CIRCLE_Y, TIME_LINE_CIRCLE_X2, TIME_LINE_CIRCLE_Y, TIME_LINE_CIRCLE_R, color);
-	img = fb_read_png_image("./clock.png");
+	img = fb_read_png_image("./pictures/clock.png");
 	fb_draw_image(CLOCK_X + TIME_INIT - timer, CLOCK_Y, img, 0);
 	fb_update();
 	fb_free_image(img);	
@@ -365,12 +371,12 @@ static void update_score(){
 static void into_image_page(){
 	draw_background();
 	in_image_page = 1;
-	draw_page("./collection.png");
+	draw_page("./pictures/collection.png");
 }
 
 static void into_drawer_page(){
 	draw_background();
-	draw_page("./board_drawer.png");
+	draw_page("./pictures/board_drawer.png");
 	char str[20];
 	char bstr[20];
 
@@ -429,10 +435,10 @@ static void into_drawer_page(){
 
 static void into_guesser_page(){
 	draw_background();
-	draw_page("./board_guesser.png");
+	draw_page("./pictures/board_guesser.png");
 	char str[20];
 	
-	draw_guesser_reply("./guess-fighting.png");
+	draw_guesser_reply("./pictures/message-fighting.png");
 	sprintf(str, "%d", score);
 	fb_draw_text(SCORE_X, SCORE_Y, str, HEAD_FONTSIZE, ORANGE);
 	fb_update();
@@ -466,9 +472,9 @@ static void timer_cb(int period) /*该函数1秒执行一次*/
 			draw_role_buttons();			
 			*/
 			if(role == GUESSER){
-				draw_guesser_reply("./guess-timeout.png");
+				draw_guesser_reply("./pictures/message-timeout.png");
 			}else{
-				draw_drawer_reply("./guess-timeout.png");
+				draw_drawer_reply("./pictures/message-timeout.png");
 			}
 			into_next_turn();
 			return;
@@ -494,7 +500,7 @@ static void into_main_page(){
 	eraser = 0;
 	eraser_op = 0;
 	for(int i=0;i<WORDS_LEN;i++)	used[i] = 0;
-	draw_page("./main.png");
+	draw_page("./pictures/main.png");
 
 	printf("The game is ready!\n");
 }
@@ -646,12 +652,12 @@ static void bluetooth_tty_event_cb(int fd)
 					*/
 					score++;
 					update_score();
-					draw_drawer_reply("./guess-yes.png");
+					draw_drawer_reply("./pictures/message-yes.png");
 					into_next_turn();
 					sprintf(bstr, "4 0 \n");
 					myWrite_nonblock(bluetooth_fd, bstr, 5);
 				}else{
-					draw_drawer_reply("./guess-no.png");
+					draw_drawer_reply("./pictures/message-no.png");
 					sprintf(bstr, "4 1 \n");
 					myWrite_nonblock(bluetooth_fd, bstr, 5);
 				}
@@ -690,7 +696,7 @@ static void bluetooth_tty_event_cb(int fd)
 				if(type == 0){
 					score++;
 					update_score();
-					draw_guesser_reply("./guess-yes.png");
+					draw_guesser_reply("./pictures/message-yes.png");
 					into_next_turn();
 					/*
 						role = NO_ROLE;
@@ -700,7 +706,7 @@ static void bluetooth_tty_event_cb(int fd)
 					draw_role_buttons();
 					*/
 				}else{
-					draw_guesser_reply("./guess-no.png");
+					draw_guesser_reply("./pictures/message-no.png");
 					//clear_line3();
 					//fb_draw_text(TEXTFRAME_X+2, pen_y, "Your answer is wrong!", 24, ORANGE);
 					//fb_update();
@@ -750,6 +756,8 @@ static void bluetooth_tty_event_cb(int fd)
 				break;
 			}
 			used[type] = 1;
+			if(role == GUESSER)
+				ra = type;
 			break;
 	}
 	
@@ -798,7 +806,7 @@ static void handle_speak(){
 	char bstr[132];
 	pcm_info_st pcm_info;
 	if(role == GUESSER)
-		draw_guesser_reply("./guess-recording.png");
+		draw_guesser_reply("./pictures/message-recording.png");
 	uint8_t *pcm_buf = audio_record(3000, &pcm_info); //录3秒音频
 	if(pcm_info.sampleRate != PCM_SAMPLE_RATE) { //实际录音采用率不满足要求时 resample
 		uint8_t *pcm_buf2 = pcm_s16_mono_resample(pcm_buf, &pcm_info, PCM_SAMPLE_RATE, &pcm_info);
@@ -808,7 +816,7 @@ static void handle_speak(){
 	pcm_write_wav_file(pcm_buf, &pcm_info, "/tmp/test.wav");
 	printf("write wav end\n");
 	if(role == GUESSER)
-		draw_guesser_reply("./guess-waiting.png");		
+		draw_guesser_reply("./pictures/message-waiting.png");		
 	pcm_free_buf(pcm_buf);
 	char *rev = send_to_vosk_server("/tmp/test.wav");
 	printf("recv from server: %s\n", rev);
@@ -873,7 +881,9 @@ static void touch_handle_game(int x, int y, int finger){
 			break;
 		case TOUCH_SAVE:
 			printf("Save the picture.\n");
-		
+			draw_save_reply("保存中...");
+			capture_screen_region(BOARD_X1, BOARD_Y1, BOARD_X2 - BOARD_X1, BOARD_Y2 - BOARD_Y1);
+			draw_save_reply("已保存！");
 			break;
 		case TOUCH_EXIT:
 			printf("Exit.\n");
@@ -985,6 +995,11 @@ static void draw_drawer_reply(char *message_image){
 	fb_free_image(img);	
 }
 
+static void draw_save_reply(char *message){
+	fb_draw_rect(SAVE_REPLY_X, SAVE_REPLY_Y - SAVE_REPLY_H, SAVE_REPLY_W, SAVE_REPLY_H, COLOR_BACKGROUND);
+	fb_draw_text(SAVE_REPLY_X, SAVE_REPLY_Y, message, SAVE_REPLY_FONT, PURPLE);
+	fb_update();
+}
 
 static void touch_event_cb(int fd)
 {
@@ -1120,6 +1135,69 @@ int main(int argc, char *argv[])
 	task_add_timer(1000, timer_cb); /*增加1秒的定时器*/
 	task_loop();
 	return 0;
+}
+/*===============================================================*/
+
+void write_png_file(char* filename, int width, int height, unsigned char* image_data) {
+    FILE *fp = fopen(filename, "wb");
+    if (!fp) {
+        printf("write_png_file: fopen error!\n");
+        return;
+    }
+
+    png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (!png_ptr) {
+        printf("write_png_file:png_create_write_struct error!\n");
+        fclose(fp);
+        return;
+    }
+
+    png_infop info_ptr = png_create_info_struct(png_ptr);
+    if (!info_ptr) {
+        printf("write_png_file:png_create_info_struct error!\n");
+        png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+        fclose(fp);
+        return;
+    }
+
+    png_init_io(png_ptr, fp);
+
+    png_set_IHDR(png_ptr, info_ptr, width, height, 8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+
+    png_write_info(png_ptr, info_ptr);
+
+    for (int y = 0; y < height; y++) {
+        png_write_row(png_ptr, image_data + y * width * 3); // 3表示RGB三个通道
+    }
+
+    png_write_end(png_ptr, NULL);
+
+    png_destroy_write_struct(&png_ptr, &info_ptr);
+    fclose(fp);
+}
+
+
+void capture_screen_region(int x, int y, int width, int height) {
+    Display* display = XOpenDisplay(NULL);
+    if (display == NULL) {
+			printf("capture_screen_region: XOpenDisplay error!\n");
+			return;
+    }
+
+    Window root = DefaultRootWindow(display);
+
+    XImage* img = XGetImage(display, root, x, y, width, height, AllPlanes, ZPixmap);
+    if (img == NULL) {
+        printf("capture_screen_region: XGetImage error!\n");
+        XCloseDisplay(display);
+        return;
+    }
+
+    // 将捕获的图像数据进行处理
+		write_png_file(words[ra], width, height, img);
+
+		XDestroyImage(img);
+    XCloseDisplay(display);
 }
 
 

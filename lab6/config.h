@@ -3,7 +3,11 @@
 #include <time.h>
 #include "../common/common.h"
 
+#include "lpng1639/png.h"
+#include "zlib/zlib.h"
 
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
 /*语音识别要求的pcm采样频率*/
 #define PCM_SAMPLE_RATE 16000 /* 16KHz */
 
@@ -74,6 +78,12 @@ static char * send_to_vosk_server(char *file);
 #define REPLY_W 142
 #define REPLY_H 38
 
+#define SAVE_REPLY_X 620
+#define SAVE_REPLY_Y 597
+#define SAVE_REPLY_FONT 11
+#define SAVE_REPLY_W 100
+#define SAVE_REPLY_H 18
+
 #define WORDS_MAX_W 180
 
 #define SCORE_X 678
@@ -132,6 +142,7 @@ static void clear_board();
 
 static void draw_guesser_reply(char *message_image);
 static void draw_drawer_reply(char *message_image);
+static void draw_save_reply(char *message);
 
 static void update_sizetool();
 
@@ -192,3 +203,4 @@ static int bluetooth_tty_init(const char *dev);
 #define IMAGE2_X2 956
 #define IMAGE2_Y2 554
 
+void write_png_file(char *filename, int width, int height, unsigned char *image_data);

@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "c:/Users/ZNBC/Desktop/嵌入式/HUST_EOS/HUST_EOS/final",
-      "program": "c:/Users/ZNBC/Desktop/嵌入式/HUST_EOS/HUST_EOS/final/build/Debug/outDebug",
+      "cwd": "c:/Users/ZNBC/Desktop/嵌入式/HUST_EOS/HUST_EOS/lab6",
+      "program": "c:/Users/ZNBC/Desktop/嵌入式/HUST_EOS/HUST_EOS/lab6/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
