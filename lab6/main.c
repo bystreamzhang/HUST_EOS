@@ -1165,8 +1165,8 @@ static void write_png_file(char* filename, int width, int height, unsigned char*
         return;
     }
 		png_set_IHDR(png_ptr, info_ptr, width, height, 8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-    png_set_filter(png, 0, PNG_ALL_FILTERS);
-    png_set_compression_level(png, 6);
+    png_set_filter(png_ptr, 0, PNG_ALL_FILTERS);
+    png_set_compression_level(png_ptr, 6);
 
     png_init_io(png_ptr, fp);
 
@@ -1181,15 +1181,7 @@ static void write_png_file(char* filename, int width, int height, unsigned char*
 
 
 static void capture_screen_region(int x, int y, int w, int h) {
-	unsigned char *img = (unsigned char *)malloc(sizeof(unsigned char) * w * 4 * h);;
-	int *buft = DRAW_BUF;
-	buft += y*SCREEN_WIDTH + x;
-	while(h-- > 0){
-		memcpy(img, buft, w*4);
-		img += w * 4;
-		buft += SCREEN_WIDTH;
-	}
-	
+	unsigned char *img = get_screen_region(x,y,w,h);
 	// 将捕获的图像数据进行处理
 	char filename[64];
 	sprintf(filename, "%s(%ld).png",words[ra],time(NULL));

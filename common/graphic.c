@@ -506,3 +506,15 @@ void fb_draw_text(int x, int y, char *text, int font_size, int color)
 	return;
 }
 
+
+unsigned char * get_screen_region(int x, int y, int w, int h){
+	unsigned char *img = (unsigned char *)malloc(sizeof(unsigned char) * w * 4 * h);;
+	int *buft = DRAW_BUF;
+	buft += y*SCREEN_WIDTH + x;
+	while(h-- > 0){
+		memcpy(img, buft, w*4);
+		img += w * 4;
+		buft += SCREEN_WIDTH;
+	}
+	return img;
+}

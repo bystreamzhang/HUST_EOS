@@ -90,6 +90,9 @@ void fb_draw_line(int sx, int sy, int dx, int dy, int color);
 void fb_draw_image(int x, int y, fb_image *image, int color);
 void fb_draw_text(int x, int y, char *text, int font_size, int color);
 
+/*lab6*/
+unsigned char *get_screen_region(int x, int y, int w, int h); // added
+
 /*=========================== input.c ===============================*/
 /*lab4*/
 #define TOUCH_NO_EVENT	0
