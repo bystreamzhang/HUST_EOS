@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <dirent.h>
 #include "../common/common.h"
 #include "../common/external/include/png.h"
 
@@ -202,4 +203,9 @@ static int bluetooth_tty_init(const char *dev);
 #define IMAGE2_Y2 554
 
 static void write_png_file(const char *filename, int width, int height, unsigned char *image_data);
+
 static void capture_screen_region(int x, int y, int w, int h);
+
+static void open_png_files(const char *folder_path);
+
+static void draw_collection();

@@ -59,6 +59,7 @@
   "files.associations": {
     "*.vue": "vue",
     "common.h": "c",
-    "png.h": "c"
+    "png.h": "c",
+    "algorithm": "c"
   }
 }

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <dirent.h>
 #include "../common/common.h"
 
 #include <netinet/in.h>
@@ -43,6 +44,12 @@ static int guessing=0;
 static int in_image_page;
 
 static int timer=TIME_INIT;
+
+static char png_files[50][50]; // 假设最多有50个PNG文件，并且文件名最长为50个字符
+
+static int png_count = 0;
+
+static int png_now = 0;
 
 int touch_area_game(int x, int y);
 
@@ -364,15 +371,60 @@ static void update_score(){
 	fb_update();
 }
 
-static void into_image_page(){
-	draw_background();
-	in_image_page = 1;
-	draw_page("./pictures/collection.png");
-	fb_image *img;
+static void open_png_files(const char* folder_path){
+	/*
 	img = fb_read_png_image("./22-1703316101.png");
 	fb_draw_image(IMAGE1_X1,IMAGE1_Y1,img,0);
 	fb_update();
 	fb_free_image(img);	
+	*/
+
+	DIR *folder = opendir(folder_path);
+	if (folder == NULL) {
+			perror("Unable to read directory");
+			return 1;
+	}
+	png_count = 0;
+	struct dirent *entry;
+
+	while ((entry = readdir(folder)) != NULL) {
+			char *dot = strrchr(entry->d_name, '.');
+			if (dot && strcmp(dot, ".png") == 0) {
+					strcpy(png_files[png_count], entry->d_name);
+					png_count++;
+			}
+			if(png_count > 50){
+				printf("Too many png files.Cannot load all.\n");
+				break;
+			}
+	}
+
+	closedir(folder);
+
+	// 打印获取到的PNG文件名
+	printf("png file list:\n");
+	for (int i = 0; i < count; i++) {
+			printf("%s\n", png_files[i]);
+	}
+}
+
+static void draw_collection(){
+	fb_image *img;
+	img = fb_read_png_image(png_files[png_now]);
+	fb_draw_image(IMAGE1_X1, IMAGE1_Y1, img, 0);
+	fb_update();
+	fb_free_image(img);	
+}
+
+static void into_image_page(){
+	draw_background();
+	in_image_page = 1;
+	draw_page("./pictures/collection.png");
+	
+	open_png_files("./collections");
+	png_now = 0;
+	draw_collection();
+
 }
 
 static void into_drawer_page(){
@@ -406,33 +458,6 @@ static void into_drawer_page(){
 	fb_draw_text(DRAW_TOPIC_FONT_X, DRAW_TOPIC_FONT_Y, words[ra], HEAD_FONTSIZE, PURPLE);
 	fb_update();
 
-	/*
-	fb_draw_text(TEXTFRAME_X+2, pen_y, "U: drawer. Score: ", 24, COLOR_TEXT);
-	sprintf(str, "%d", score);
-	fb_draw_text(TEXTFRAME_X+2+19*11, pen_y, str, 24, ORANGE);
-	fb_update();
-	pen_y += 30;
-	if(!guessing){
-		guessing = 1;
-		ra = rand()%WORDS_LEN;
-		int cnt = 0;
-		while(used[ra]){
-			if(cnt == WORDS_LEN){
-				for(int i=0;i<WORDS_LEN;i++)	used[i] = 0;
-			}
-			ra = (ra+1)%WORDS_LEN;
-			cnt++;
-		}
-		used[ra] = 1;
-		sprintf(bstr, "6 %d \n", ra); 
-		myWrite_nonblock(bluetooth_fd, bstr, 10);
-		
-	}
-	fb_draw_text(TEXTFRAME_X+2, pen_y, "U draw: ", 24, COLOR_TEXT);
-	fb_draw_text(TEXTFRAME_X+2+8*11, pen_y, words[ra], 24, PURPLE);
-	fb_update();
-	*/
-	
 }
 
 static void into_guesser_page(){
@@ -444,16 +469,6 @@ static void into_guesser_page(){
 	sprintf(str, "%d", score);
 	fb_draw_text(SCORE_X, SCORE_Y, str, HEAD_FONTSIZE, ORANGE);
 	fb_update();
-	/*
-	
-		fb_draw_text(TEXTFRAME_X+2, pen_y, "U: guesser. Score: ", 24, COLOR_TEXT);
-		sprintf(str, "%d", score);
-		fb_draw_text(TEXTFRAME_X+2+20*11, pen_y, str, 24, ORANGE);
-		fb_update();
-		pen_y += 30;
-		fb_draw_text(TEXTFRAME_X+2, pen_y, "U guess and speak ans.", 24, COLOR_TEXT);
-		fb_update();
-	*/
 
 }
 
@@ -464,15 +479,6 @@ static void timer_cb(int period) /*该函数1秒执行一次*/
 			timer --;
 			draw_timer();
 		}else{
-			/*
-			//clear_line3();
-			//fb_draw_text(TEXTFRAME_X+2, pen_y, "Time out!", 24, RED);
-			//fb_update();
-			guessing = 0;
-			role = NO_ROLE;
-			timer = TIME_INIT;
-			draw_role_buttons();			
-			*/
 			if(role == GUESSER){
 				draw_guesser_reply("./pictures/message-timeout.png");
 			}else{
@@ -1187,7 +1193,7 @@ static void capture_screen_region(int x, int y, int w, int h) {
 	unsigned char *img = get_screen_region(x,y,w,h);
 	// 将捕获的图像数据进行处理
 	char filename[128];
-	sprintf(filename, "%d-%ld.png",ra,time(NULL));
+	sprintf(filename, "./collections/%d-%ld.png",ra,time(NULL));
 	write_png_file(filename, w, h, img);
 	free(img);
 }
