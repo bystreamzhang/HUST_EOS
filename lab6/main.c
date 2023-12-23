@@ -1164,15 +1164,15 @@ static void write_png_file(char* filename, int width, int height, unsigned char*
         fclose(fp);
         return;
     }
-		png_set_IHDR(png, info, width, height, 8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+		png_set_IHDR(png_ptr, info_ptr, width, height, 8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
     png_set_filter(png, 0, PNG_ALL_FILTERS);
-    png_set_compression_level(png, Z_BEST_SPEED);
+    png_set_compression_level(png, 6);
 
     png_init_io(png_ptr, fp);
 
-    png_set_rows(png_ptr, info, (png_bytepp)image_data);
+    png_set_rows(png_ptr, info_ptr, (png_bytepp)image_data);
 
-    png_write_png(png_ptr, info, PNG_TRANSFORM_IDENTITY, NULL);
+    png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
 
     png_destroy_write_struct(&png_ptr, &info_ptr);
     fclose(fp);
@@ -1193,7 +1193,7 @@ static void capture_screen_region(int x, int y, int w, int h) {
 	// 将捕获的图像数据进行处理
 	char filename[64];
 	sprintf(filename, "%s(%ld).png",words[ra],time(NULL));
-	write_png_file(filename, width, height, (unsigned char *)img);
+	write_png_file(filename, w, h, (unsigned char *)img);
 	free(img);
 }
 
