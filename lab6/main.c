@@ -403,7 +403,7 @@ static void open_png_files(const char* folder_path){
 
 static void draw_collection(){
 	fb_image *img;
-	char *img_path;
+	char img_path[256];
 	sprintf(img_path, "./collections/%s", png_files[png_now]);
 	img = fb_read_png_image(img_path);
 	fb_draw_image(IMAGE1_X1, IMAGE1_Y1, img, 0);
