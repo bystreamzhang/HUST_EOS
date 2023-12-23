@@ -10,11 +10,7 @@
 #include "audio_util.h"
 #include "config.h"
 
-#include "lpng1639/png.h"
-#include "zlib/zlib.h"
-
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
+#include "../common/external/include/png.h"
 
 static int touch_fd;
 static int bluetooth_fd;
@@ -1000,6 +996,14 @@ static void draw_save_reply(char *message){
 	fb_draw_text(SAVE_REPLY_X, SAVE_REPLY_Y, message, SAVE_REPLY_FONT, PURPLE);
 	fb_update();
 }
+static void touch_handle_image(int x, int y, int finger){
+	if(x >= EXIT_X && x < EXIT_X + TOOL_SIZE && y >= EXIT_Y && y < EXIT_Y + TOOL_SIZE){
+		printf("Exit.\n");
+		into_main_page();
+		return;
+	}
+}
+
 
 static void touch_event_cb(int fd)
 {
@@ -1007,7 +1011,7 @@ static void touch_event_cb(int fd)
 	type = touch_read(fd, &x,&y,&finger);
 	char bstr[132];
 	if(in_image_page){
-		
+		touch_handle_image(x, y, finger);
 		return;
 	}
 	if(role == NO_ROLE){
@@ -1064,8 +1068,9 @@ static void touch_event_cb(int fd)
 				myWrite_nonblock(bluetooth_fd, bstr, 5);
 				return;
 			}
-		}else if((x>=IMAGE_X1)&&(x<IMAGE_Y1)&&(y>=IMAGE_X2)&&(y<IMAGE_Y2)){
+		}else if((x>=IMAGE_X1)&&(x<IMAGE_X2)&&(y>=IMAGE_Y1)&&(y<IMAGE_Y2)){
 			into_image_page();
+			return;
 		}
 		return;
 	}
@@ -1138,66 +1143,58 @@ int main(int argc, char *argv[])
 }
 /*===============================================================*/
 
-void write_png_file(char* filename, int width, int height, unsigned char* image_data) {
+static void write_png_file(char* filename, int width, int height, unsigned char* image_data) {
     FILE *fp = fopen(filename, "wb");
     if (!fp) {
-        printf("write_png_file: fopen error!\n");
+        fprintf(stderr, "Failed to open file for writing\n");
         return;
     }
 
     png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png_ptr) {
-        printf("write_png_file:png_create_write_struct error!\n");
+        fprintf(stderr, "Failed to create PNG write structure\n");
         fclose(fp);
         return;
     }
 
     png_infop info_ptr = png_create_info_struct(png_ptr);
     if (!info_ptr) {
-        printf("write_png_file:png_create_info_struct error!\n");
+        fprintf(stderr, "Failed to create PNG info structure\n");
         png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
         fclose(fp);
         return;
     }
+		png_set_IHDR(png, info, width, height, 8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+    png_set_filter(png, 0, PNG_ALL_FILTERS);
+    png_set_compression_level(png, Z_BEST_SPEED);
 
     png_init_io(png_ptr, fp);
 
-    png_set_IHDR(png_ptr, info_ptr, width, height, 8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+    png_set_rows(png_ptr, info, (png_bytepp)image_data);
 
-    png_write_info(png_ptr, info_ptr);
-
-    for (int y = 0; y < height; y++) {
-        png_write_row(png_ptr, image_data + y * width * 3); // 3表示RGB三个通道
-    }
-
-    png_write_end(png_ptr, NULL);
+    png_write_png(png_ptr, info, PNG_TRANSFORM_IDENTITY, NULL);
 
     png_destroy_write_struct(&png_ptr, &info_ptr);
     fclose(fp);
 }
 
 
-void capture_screen_region(int x, int y, int width, int height) {
-    Display* display = XOpenDisplay(NULL);
-    if (display == NULL) {
-			printf("capture_screen_region: XOpenDisplay error!\n");
-			return;
-    }
 
-    Window root = DefaultRootWindow(display);
-
-    XImage* img = XGetImage(display, root, x, y, width, height, AllPlanes, ZPixmap);
-    if (img == NULL) {
-        printf("capture_screen_region: XGetImage error!\n");
-        XCloseDisplay(display);
-        return;
-    }
-
-    // 将捕获的图像数据进行处理
-		write_png_file(words[ra], width, height, img);
-
-		XDestroyImage(img);
-    XCloseDisplay(display);
+static void capture_screen_region(int x, int y, int w, int h) {
+	unsigned char *img = (unsigned char *)malloc(sizeof(unsigned char) * w * 4 * h);;
+	int *buft = DRAW_BUF;
+	buft += y*SCREEN_WIDTH + x;
+	while(h-- > 0){
+		memcpy(img, buft, w*4);
+		img += w * 4;
+		buft += SCREEN_WIDTH;
+	}
+	
+	// 将捕获的图像数据进行处理
+	char filename[64];
+	sprintf(filename, "%s(%ld).png",words[ra],time(NULL));
+	write_png_file(filename, width, height, (unsigned char *)img);
+	free(img);
 }
 
 

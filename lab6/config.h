@@ -2,12 +2,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include "../common/common.h"
+#include "../common/external/include/png.h"
 
-#include "lpng1639/png.h"
-#include "zlib/zlib.h"
-
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
 /*语音识别要求的pcm采样频率*/
 #define PCM_SAMPLE_RATE 16000 /* 16KHz */
 
@@ -183,6 +179,8 @@ static void touch_handle_game(int x, int y, int finger);
 
 static void move_handle_game(int x, int y, int finger);
 
+static void touch_handle_image(int x, int y, int finger);
+
 static void handle_speak();
 
 static void bluetooth_tty_event_cb(int fd);
@@ -203,4 +201,5 @@ static int bluetooth_tty_init(const char *dev);
 #define IMAGE2_X2 956
 #define IMAGE2_Y2 554
 
-void write_png_file(char *filename, int width, int height, unsigned char *image_data);
+static void write_png_file(char *filename, int width, int height, unsigned char *image_data);
+static void capture_screen_region(int x, int y, int w, int h);
