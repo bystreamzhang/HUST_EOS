@@ -382,7 +382,7 @@ static void open_png_files(const char* folder_path){
 	DIR *folder = opendir(folder_path);
 	if (folder == NULL) {
 			perror("Unable to read directory");
-			return 1;
+			return ;
 	}
 	png_count = 0;
 	struct dirent *entry;
@@ -403,8 +403,8 @@ static void open_png_files(const char* folder_path){
 
 	// 打印获取到的PNG文件名
 	printf("png file list:\n");
-	for (int i = 0; i < count; i++) {
-			printf("%s\n", png_files[i]);
+	for (int i = 0; i < png_count; i++) {
+			printf("%d: %s\n", i, png_files[i]);
 	}
 }
 
@@ -981,40 +981,6 @@ static void touch_event_cb(int fd)
 	}
 	if(role == NO_ROLE){
 		if(type != TOUCH_PRESS )return;
-		//printf("type=%d,x=%d,y=%d,finger=%d\n",type,x,y,finger);
-		/*
-		if((x>=RANDOM_X)&&(x<RANDOM_X+RANDOM_W)&&(y>=RANDOM_Y)&&(y<RANDOM_Y+RANDOM_H)) {
-			role = rand()%2+1;
-		}
-		if((role == DRAWER) || ( (x>=DRAW_X)&&(x<DRAW_X+DRAW_W)&&(y>=DRAW_Y)&&(y<DRAW_Y+DRAW_H) )) {
-			role = DRAWER;
-			printf("you chose to draw (you are role 1).\n");
-			sprintf(bstr, "0 2 \n"); // first 0 means switching role, second 2 means the opposite role
-			draw_role1();
-			
-			myWrite_nonblock(bluetooth_fd, bstr, 5);
-			return;
-		}
-		if((role == GUESSER) || ( (x>=GUESS_X)&&(x<GUESS_X+GUESS_W)&&(y>=GUESS_Y)&&(y<GUESS_Y+GUESS_H) )) {
-			role = GUESSER;
-			printf("you chose to guess (you are role 2).\n");
-			sprintf(bstr, "0 1 \n");
-			draw_role2();
-			
-			myWrite_nonblock(bluetooth_fd, bstr, 5);
-			return;
-		}
-		if( (x>=FREE_X)&&(x<FREE_X+FREE_W)&&(y>=FREE_Y)&&(y<FREE_Y+FREE_H) ) {
-			role = BOTH;
-			printf("you chose the free mode.\n");
-			sprintf(bstr, "0 3 \n");
-			draw_role1();
-			
-			myWrite_nonblock(bluetooth_fd, bstr, 5);
-			return;
-		}
-		return;
-		*/
 		if((x>=START_X1)&&(x<START_X2)&&(y>=START_Y1)&&(y<START_Y2)) {
 			role = rand()%2+1;
 				if((role == DRAWER)) {
