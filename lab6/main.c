@@ -267,7 +267,7 @@ static void draw_collection(){
 	char img_path[256];
 	sprintf(img_path, "./collections/%s", png_files[png_now]);
 	img = fb_read_png_image(img_path);
-	fb_draw_image(IMAGE_X1, IMAGE_Y1, img, 0);
+	fb_draw_image(IMAGE_X, IMAGE_Y, img, 0);
 	fb_update();
 	fb_free_image(img);	
 }
