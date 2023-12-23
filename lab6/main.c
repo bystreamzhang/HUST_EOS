@@ -1132,8 +1132,7 @@ static void write_png_file(const char* filename, int width, int height, unsigned
     }
 		png_init_io(png_ptr, fp);
     png_set_IHDR(png_ptr, info_ptr, width, height, 8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-    // Explicitly set the byte order to RGBA
-    png_set_filler(png_ptr, 0, PNG_FILLER_AFTER);
+
 		png_bytep *row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
 		if (fixed_image_data == NULL) {
 			fprintf(stderr, "Error: Memory allocation for row_pointers failed in write_png_file\n");
