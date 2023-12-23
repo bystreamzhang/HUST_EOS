@@ -201,5 +201,5 @@ static int bluetooth_tty_init(const char *dev);
 #define IMAGE2_X2 956
 #define IMAGE2_Y2 554
 
-static void write_png_file(char *filename, int width, int height, unsigned char *image_data);
+static void write_png_file(const char *filename, int width, int height, unsigned char *image_data);
 static void capture_screen_region(int x, int y, int w, int h);

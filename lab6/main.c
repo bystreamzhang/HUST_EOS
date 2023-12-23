@@ -1080,7 +1080,6 @@ int main(int argc, char *argv[])
 
 	printf("If your input device is not working, you may exit and enter ' ./lab6 -e event0 ' if your event is event0, for example.\n(The default event is event1.)\n");
 	int s = 0, e = 0;
-	printf("argv: %s %s\n", argv[0], argv[1]);
 	if(argv[1] != NULL){
 		if(argv[1][0] == '-'){
 			if(argv[1][1] == 'e' || argv[1][2] == 'e'){
@@ -1117,38 +1116,46 @@ int main(int argc, char *argv[])
 }
 /*===============================================================*/
 
-static void write_png_file(char* filename, int width, int height, unsigned char* image_data) {
+static void write_png_file(const char* filename, int width, int height, unsigned char* image_data) {
     FILE *fp = fopen(filename, "wb");
     if (!fp) {
-        fprintf(stderr, "Failed to open file for writing\n");
+        fprintf(stderr, "Error: Could not open file %s for writing\n", filename);
         return;
     }
 
     png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png_ptr) {
-        fprintf(stderr, "Failed to create PNG write structure\n");
+        fprintf(stderr, "Error: Could not create PNG write struct\n");
         fclose(fp);
         return;
     }
 
     png_infop info_ptr = png_create_info_struct(png_ptr);
     if (!info_ptr) {
-        fprintf(stderr, "Failed to create PNG info structure\n");
         png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+        fprintf(stderr, "Error: Could not create PNG info struct\n");
         fclose(fp);
         return;
     }
-		png_set_IHDR(png_ptr, info_ptr, width, height, 8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-    png_set_filter(png_ptr, 0, PNG_ALL_FILTERS);
-    png_set_compression_level(png_ptr, 6);
+		if (setjmp(png_jmpbuf(png_ptr))) {
+        fclose(fp);
+        png_destroy_write_struct(&png_ptr, &info_ptr);
+        fprintf(stderr, "Error during PNG creation\n");
+        return;
+    }
+		png_init_io(png_ptr, fp);
+    png_set_IHDR(png_ptr, info_ptr, width, height, 8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+    png_bytep *row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
+    for (int y = 0; y < height; y++) {
+        row_pointers[y] = (png_bytep)(image_data + y * width * 4);
+    }
 
-    png_init_io(png_ptr, fp);
-
-    png_set_rows(png_ptr, info_ptr, (png_bytepp)image_data);
-
+    png_set_rows(png_ptr, info_ptr, row_pointers);
     png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
 
+    png_free_data(png_ptr, info_ptr, PNG_FREE_ROWS, 0);
     png_destroy_write_struct(&png_ptr, &info_ptr);
+    free(row_pointers);
     fclose(fp);
 }
 

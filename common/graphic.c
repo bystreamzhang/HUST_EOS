@@ -509,6 +509,10 @@ void fb_draw_text(int x, int y, char *text, int font_size, int color)
 
 unsigned char * get_screen_region(int x, int y, int w, int h){
 	unsigned char *img = (unsigned char *)malloc(sizeof(unsigned char) * w * 4 * h);
+	if (img == NULL) {
+    fprintf(stderr, "Error: Memory allocation failed in get_screen_region\n");
+    return NULL;
+}
 	unsigned char *img_start = img;
 	int *buft = DRAW_BUF;
 	buft += y*SCREEN_WIDTH + x;
