@@ -369,7 +369,7 @@ static void into_image_page(){
 	in_image_page = 1;
 	draw_page("./pictures/collection.png");
 	fb_image *img;
-	img = fb_read_png_image("./26-1703312523.png");
+	img = fb_read_png_image("./22-1703316101.png");
 	fb_draw_image(IMAGE1_X1,IMAGE1_Y1,img,0);
 	fb_update();
 	fb_free_image(img);	
@@ -378,6 +378,7 @@ static void into_image_page(){
 static void into_drawer_page(){
 	draw_background();
 	draw_page("./pictures/board_drawer.png");
+	draw_usingtoolframe();
 	char str[20];
 	char bstr[20];
 
