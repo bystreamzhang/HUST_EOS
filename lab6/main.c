@@ -267,7 +267,7 @@ static void draw_collection(){
 	char img_path[256];
 	sprintf(img_path, "./collections/%s", png_files[png_now]);
 	img = fb_read_png_image(img_path);
-	fb_draw_image(IMAGE1_X1, IMAGE1_Y1, img, 0);
+	fb_draw_image(IMAGE_X1, IMAGE_Y1, img, 0);
 	fb_update();
 	fb_free_image(img);	
 }
@@ -277,7 +277,7 @@ static void draw_image_topic(){
 	fb_update();
 	char str[20];
 	for (int i = 0;;i++){
-		if(png_files[png_now][i] == NULL || png_files[png_now][i] == '.'){
+		if(png_files[png_now][i] == '\0' || png_files[png_now][i] == '.'){
 			fb_draw_text(IMAGE_TOPIC_X, IMAGE_TOPIC_Y, "未知", IMAGE_FONTSIZE, ORANGE);
 			fb_update();
 			return;
@@ -289,7 +289,7 @@ static void draw_image_topic(){
 		str[i] = png_files[png_now][i];
 	}
 	int ira = -1;
-	sscanf(ira, "%d", &str);
+	sscanf(str, "%d", &ira);
 	if(ira < 0 || ira > WORDS_LEN){
 		fb_draw_text(IMAGE_TOPIC_X, IMAGE_TOPIC_Y, words[ira], IMAGE_FONTSIZE, ORANGE);
 		fb_update();
@@ -299,7 +299,7 @@ static void draw_image_topic(){
 	fb_update();
 }
 
-static draw_image_page(){
+static void draw_image_page(){
 	char str[12];
 	sprintf(str, "%d", png_now+1);
 	fb_draw_text(IMAGE_PAGEID_X, IMAGE_PAGEID_Y, str, IMAGE_FONTSIZE, ORANGE);
@@ -809,7 +809,7 @@ static void touch_event_cb(int fd)
 				touch_handle_image(x, y, finger);
 				break;
 			case TOUCH_MOVE:
-				move_handle_image(x, y, finger)
+				move_handle_image(x, y, finger);
 				break;
 			case TOUCH_RELEASE:
 				//printf("TOUCH_RELEASE：x=%d,y=%d,finger=%d\n",x,y,finger);
