@@ -1123,21 +1123,21 @@ int main(int argc, char *argv[])
 	printf("If your input device is not working, you may exit and enter ' ./lab6 -e event0 ' if your event is event0, for example.\n(The default event is event1.)\n");
 	int s = 0, e = 0;
 	printf("argv: %s %s\n", argv[0], argv[1]);
-	if(argv[0] != NULL){
-		if(argv[0][0] == '-'){
-			if(argv[0][1] == 'e' || argv[0][2] == 'e'){
+	if(argv[1] != NULL){
+		if(argv[1][0] == '-'){
+			if(argv[1][1] == 'e' || argv[1][2] == 'e'){
 				e = 1;
 			}
-			if(argv[0][1] == 's' || argv[0][2] == 's'){
+			if(argv[1][1] == 's' || argv[1][2] == 's'){
 				s = 1;
 			}
 		}
 	}
-	if(argv[1] == NULL || e == 0)
+	if(argv[2] == NULL || e == 0)
 		touch_fd = touch_init("/dev/input/event1");
 	else if(e == 1){
 		char event[30];
-		sprintf(event, "/dev/input/%s", argv[1]);
+		sprintf(event, "/dev/input/%s", argv[2]);
 		touch_fd = touch_init(event);
 	}
 
