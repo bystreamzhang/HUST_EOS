@@ -1122,6 +1122,7 @@ int main(int argc, char *argv[])
 
 	printf("If your input device is not working, you may exit and enter ' ./lab6 -e event0 ' if your event is event0, for example.\n(The default event is event1.)\n");
 	int s = 0, e = 0;
+	printf("argv: %s %s\n", argv[0], argv[1]);
 	if(argv[0] != NULL){
 		if(argv[0][0] == '-'){
 			if(argv[0][1] == 'e' || argv[0][2] == 'e'){
@@ -1132,15 +1133,15 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
-	if(argv[1] == NULL)
+	if(argv[1] == NULL || e == 0)
 		touch_fd = touch_init("/dev/input/event1");
-	else{
+	else if(e == 1){
 		char event[30];
 		sprintf(event, "/dev/input/%s", argv[1]);
 		touch_fd = touch_init(event);
 	}
 
-	printf("If you do not want to use bluetooth and just want to view the pictures, you may add -s.For example, enter './lab6 -es event0'\n(In this mode, you should only view the pictures.)\n");
+	printf("If you do not want to use bluetooth and just want to view the pictures, you may add -s.For example, enter './lab6 -es event0'\n");
 	task_add_file(touch_fd, touch_event_cb);
 	
 	if(s == 0){
@@ -1148,6 +1149,8 @@ int main(int argc, char *argv[])
 
 		if(bluetooth_fd == -1) return 0;
 		task_add_file(bluetooth_fd, bluetooth_tty_event_cb);
+	}else{
+		printf("(In this mode, you should only view the pictures)\n");
 	}
 
 	task_add_timer(1000, timer_cb); /*增加1秒的定时器*/
