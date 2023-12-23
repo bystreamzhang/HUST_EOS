@@ -213,6 +213,6 @@ static void draw_collection();
 
 static void draw_image_topic();
 
-static draw_image_page();
+static void draw_image_page();
 
 static void change_image_page(int delta);

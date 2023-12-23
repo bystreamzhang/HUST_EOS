@@ -801,6 +801,7 @@ static void move_handle_image(int x, int y, int finger){
 
 static void touch_event_cb(int fd)
 {
+	char bstr[132];
 	int type,x,y,finger;
 	type = touch_read(fd, &x,&y,&finger);
 	if(in_image_page){
