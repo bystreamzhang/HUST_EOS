@@ -368,6 +368,11 @@ static void into_image_page(){
 	draw_background();
 	in_image_page = 1;
 	draw_page("./pictures/collection.png");
+	fb_image *img;
+	img = fb_read_png_image("./26-1703312523.png");
+	fb_draw_image(IMAGE1_X1,IMAGE1_Y1,img,0);
+	fb_update();
+	fb_free_image(img);	
 }
 
 static void into_drawer_page(){
@@ -898,22 +903,6 @@ static void move_handle_game(int x, int y, int finger){
 	}
 	char bstr[132];
 	int color = get_color(finger);
-	/*
-	if((role == DRAWER) && (x >= 0 && x < TEXTFRAME_X + TEXTFRAME_W + line_r && y >= 0 && y < TEXTFRAME_Y + pen_y + 6 + line_r)){
-		if(old[finger].x < TEXTFRAME_X + TEXTFRAME_W + line_r){
-			y = TEXTFRAME_Y + pen_y + 6 + line_r;
-		} else {
-			x = TEXTFRAME_X + TEXTFRAME_W + line_r;
-		}
-	}else
-	if((role == BOTH) && (x >= 0 && x < TEXTFRAME_X + TEXTFRAME_W + line_r && y >= 0 && y < TEXTFRAME_Y + pen_y + 30 + 6 + line_r)){
-		if(old[finger].x < TEXTFRAME_X + TEXTFRAME_W + line_r){
-			y = TEXTFRAME_Y + pen_y + 30 + 6 + line_r;
-		} else {
-			x = TEXTFRAME_X + TEXTFRAME_W + line_r;
-		}
-	}else
-	*/
 	if(x < BOARD_X1)
 		x = BOARD_X1;
 	else if(x >= BOARD_X2)
@@ -922,38 +911,7 @@ static void move_handle_game(int x, int y, int finger){
 		y = BOARD_Y1;
 	else if(y >= BOARD_Y2)
 		y = BOARD_Y2-1;
-	
-	/*
-	if(x >= 0 && x < TOOL_SIZE + line_r && y >= BUTTON_Y_CLEAR - (TOOL_SIZE*3) - line_r && y < BUTTON_Y_CLEAR - (TOOL_SIZE<<1)){
-		if(old[finger].x < TOOL_SIZE + line_r){
-			y = BUTTON_Y_CLEAR - (TOOL_SIZE*3) - line_r;
-		} else {
-			x = TOOL_SIZE + line_r;
-		}
-	}else
-	if(x >= 0 && x < TOOL_SIZE + line_r && y >= BUTTON_Y_CLEAR - (TOOL_SIZE<<1) && y < BUTTON_Y_CLEAR - TOOL_SIZE){
-		if(old[finger].x < TOOL_SIZE + line_r){
-			y = BUTTON_Y_CLEAR - (TOOL_SIZE*3) - line_r;
-		} else {
-			x = TOOL_SIZE + line_r;
-		}
-	}else
-	if(x >= 0 && x < TOOL_SIZE + line_r && y >= BUTTON_Y_CLEAR - TOOL_SIZE && y < BUTTON_Y_CLEAR){
-	
-		if(old[finger].x < TOOL_SIZE + line_r){
-			y = BUTTON_Y_CLEAR - (TOOL_SIZE*3) - line_r;
-		} else {
-			x = TOOL_SIZE + line_r;
-		}
-	}else
-	if(x >= BUTTON_X_CLEAR - line_r && x < BUTTON_X2_CLEAR + line_r && y >= BUTTON_Y_CLEAR - line_r && y < BUTTON_Y2_CLEAR + line_r){
-		if(old[finger].x < BUTTON_X2_CLEAR + line_r){
-			y = BUTTON_Y_CLEAR - line_r;
-		} else {
-			x = BUTTON_X2_CLEAR + line_r;
-		}
-	}
-	*/
+
 	
 	fb_draw_line_wide(old[finger].x, old[finger].y, x, y, line_r, color);
 	fb_update();
@@ -1201,7 +1159,7 @@ static void capture_screen_region(int x, int y, int w, int h) {
 	// 将捕获的图像数据进行处理
 	char filename[128];
 	sprintf(filename, "%d-%ld.png",ra,time(NULL));
-	write_png_file(filename, w, h, (unsigned char *)img);
+	write_png_file(filename, w, h, img);
 	free(img);
 }
 
