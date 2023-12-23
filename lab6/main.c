@@ -1200,7 +1200,7 @@ static void capture_screen_region(int x, int y, int w, int h) {
 	unsigned char *img = get_screen_region(x,y,w,h);
 	// 将捕获的图像数据进行处理
 	char filename[128];
-	sprintf(filename, "%s(%ld).png",words[ra],time(NULL));
+	sprintf(filename, "%d-%ld.png",ra,time(NULL));
 	write_png_file(filename, w, h, (unsigned char *)img);
 	free(img);
 }
