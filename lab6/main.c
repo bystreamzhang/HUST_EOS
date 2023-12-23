@@ -1130,6 +1130,7 @@ static void write_png_file(const char* filename, int width, int height, unsigned
 						fixed_image_data[y * width + x + 1] = image_data[y * width + x + 1];
 						fixed_image_data[y * width + x + 2] = image_data[y * width + x + 0];
 						fixed_image_data[y * width + x + 3] = image_data[y * width + x + 3];
+				}
 		}
     FILE *fp = fopen(filename, "wb");
     if (!fp) {
