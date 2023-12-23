@@ -1118,6 +1118,19 @@ int main(int argc, char *argv[])
 /*===============================================================*/
 
 static void write_png_file(const char* filename, int width, int height, unsigned char* image_data) {
+		// 修改数据排列顺序，将BGR转换为RGBA
+		unsigned char* fixed_image_data = (unsigned char*)malloc(width * height * 4);
+		if (fixed_image_data == NULL) {
+			fprintf(stderr, "Error: Memory allocation for fixed_image_data failed in write_png_file\n");
+			return ;
+		}
+		for (int y = 0; y < height*4; y+=4) {
+				for (int x = 0; x < width*4; x+=4) {
+						fixed_image_data[y * width + x + 0] = image_data[y * width + x + 2];
+						fixed_image_data[y * width + x + 1] = image_data[y * width + x + 1];
+						fixed_image_data[y * width + x + 2] = image_data[y * width + x + 0];
+						fixed_image_data[y * width + x + 3] = image_data[y * width + x + 3];
+		}
     FILE *fp = fopen(filename, "wb");
     if (!fp) {
         fprintf(stderr, "Error: Could not open file %s for writing\n", filename);
@@ -1146,9 +1159,15 @@ static void write_png_file(const char* filename, int width, int height, unsigned
     }
 		png_init_io(png_ptr, fp);
     png_set_IHDR(png_ptr, info_ptr, width, height, 8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-    png_bytep *row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
+    // Explicitly set the byte order to RGBA
+    png_set_filler(png_ptr, 0, PNG_FILLER_AFTER);
+		png_bytep *row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
+		if (fixed_image_data == NULL) {
+			fprintf(stderr, "Error: Memory allocation for row_pointers failed in write_png_file\n");
+			return ;
+		}
     for (int y = 0; y < height; y++) {
-        row_pointers[y] = (png_bytep)(image_data + y * width * 4);
+        row_pointers[y] = (png_bytep)(fixed_image_data + y * width * 4);
     }
 
     png_set_rows(png_ptr, info_ptr, row_pointers);
@@ -1157,7 +1176,8 @@ static void write_png_file(const char* filename, int width, int height, unsigned
     png_free_data(png_ptr, info_ptr, PNG_FREE_ROWS, 0);
     png_destroy_write_struct(&png_ptr, &info_ptr);
     free(row_pointers);
-    fclose(fp);
+		free(fixed_image_data);
+		fclose(fp);
 }
 
 

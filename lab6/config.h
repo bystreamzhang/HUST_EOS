@@ -75,10 +75,10 @@ static char * send_to_vosk_server(char *file);
 #define REPLY_H 38
 
 #define SAVE_REPLY_X 620
-#define SAVE_REPLY_Y 597
+#define SAVE_REPLY_Y 591
 #define SAVE_REPLY_FONT 11
 #define SAVE_REPLY_W 100
-#define SAVE_REPLY_H 18
+#define SAVE_REPLY_H 14
 
 #define WORDS_MAX_W 180
 
