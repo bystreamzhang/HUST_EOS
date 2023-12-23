@@ -291,7 +291,7 @@ static void draw_image_topic(){
 	int ira = -1;
 	sscanf(str, "%d", &ira);
 	if(ira < 0 || ira > WORDS_LEN){
-		fb_draw_text(IMAGE_TOPIC_X, IMAGE_TOPIC_Y, words[ira], IMAGE_FONTSIZE, ORANGE);
+		fb_draw_text(IMAGE_TOPIC_X, IMAGE_TOPIC_Y, "未知", IMAGE_FONTSIZE, ORANGE);
 		fb_update();
 		return;
 	}
