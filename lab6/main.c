@@ -46,10 +46,10 @@ static int in_image_page;
 static int timer=TIME_INIT;
 
 static char png_files[50][50]; // 假设最多有50个PNG文件，并且文件名最长为50个字符
-
 static int png_count = 0;
-
 static int png_now = 0;
+static int page_up = 0;
+static int page_down = 0;
 
 int touch_area_game(int x, int y);
 
@@ -139,44 +139,6 @@ static void draw_background(){
 	return;
 }
 
-/*
-static void draw_clear_button(){
-	if(role == BOTH){
-		// in free mode, disable Clear button 
-		printf("Clear button if disabled in free mode!\n");
-		return;
-	}
-	fb_draw_line_wide(BUTTON_X_CLEAR + BUTTON_R_CLEAR, BUTTON_Y_CLEAR + BUTTON_R_CLEAR, BUTTON_X_CLEAR + BUTTON_W_CLEAR - BUTTON_R_CLEAR, BUTTON_Y_CLEAR + BUTTON_R_CLEAR, BUTTON_R_CLEAR, PURPLE);
-	fb_draw_text(BUTTON_X_CLEAR + BUTTON_R_CLEAR-2, BUTTON_Y_CLEAR + BUTTON_FONTSIZE_CLEAR - ((BUTTON_H_CLEAR - BUTTON_FONTSIZE_CLEAR)>>1), "Clear", BUTTON_FONTSIZE_CLEAR, ORANGE);
-	fb_update();
-	return;
-}
-
-static void draw_speak_button(){
-	fb_draw_line_wide(BUTTON_X_CLEAR + BUTTON_R_CLEAR, BUTTON_Y_CLEAR + BUTTON_R_CLEAR, BUTTON_X_CLEAR + BUTTON_W_CLEAR - BUTTON_R_CLEAR, BUTTON_Y_CLEAR + BUTTON_R_CLEAR, BUTTON_R_CLEAR, BLUE);
-	fb_draw_text(BUTTON_X_CLEAR + BUTTON_R_CLEAR-2, BUTTON_Y_CLEAR + BUTTON_FONTSIZE_CLEAR - ((BUTTON_H_CLEAR - BUTTON_FONTSIZE_CLEAR)>>1), "Speak", BUTTON_FONTSIZE_CLEAR, ORANGE);
-	fb_update();
-	return;
-}
-
-static void draw_tools(){
-	fb_image *img;
-	img = fb_read_png_image("./color-palette.png");
-	fb_draw_image(6,BUTTON_Y_CLEAR - TOOL_SIZE,img,0);
-	fb_update();
-	fb_free_image(img);	
-	img = fb_read_png_image("./eraser.png");
-	fb_draw_image(6,BUTTON_Y_CLEAR - (TOOL_SIZE<<1),img,0);
-	fb_update();
-	fb_free_image(img);	
-	img = fb_read_png_image("./size.png");
-	fb_draw_image(6,BUTTON_Y_CLEAR - (TOOL_SIZE*3),img,0);
-	fb_draw_circle(6+(TOOL_SIZE>>1), BUTTON_Y_CLEAR - (TOOL_SIZE<<1) - (TOOL_SIZE>>1), line_r, get_color_real(0));
-	fb_update();
-	fb_free_image(img);	
-}
-
-*/
 
 static void update_sizetool(){
 	fb_draw_circle(TOOL_X1 + (TOOL_SIZE>>1), TOOL_Y1 + (TOOL_SIZE>>1), line_r, get_color_real(0));
@@ -191,7 +153,6 @@ static void change_line_r(){
 		line_r = LINE_R_MIN;
 	update_sizetool();
 }
-
 
 
 static void clear_usingtoolframe(){
@@ -224,77 +185,8 @@ static void draw_page(char *page_image){
 	fb_update();
 	fb_free_image(img);	
 }
-/*
 
-static void draw_textframe(){
-	
-	if(role == NO_ROLE)return;
-	pen_y = PEN_Y_INIT;
-	char str[20];
-	char bstr[20];
-	if(role == DRAWER){
-		fb_draw_text(TEXTFRAME_X+2, pen_y, "U: drawer. Score: ", 24, COLOR_TEXT);
-		sprintf(str, "%d", score);
-		fb_draw_text(TEXTFRAME_X+2+19*11, pen_y, str, 24, ORANGE);
-		fb_update();
-		pen_y += 30;
-		if(!guessing){
-			guessing = 1;
-			ra = rand()%WORDS_LEN;
-			int cnt = 0;
-			while(used[ra]){
-				if(cnt == WORDS_LEN){
-					for(int i=0;i<WORDS_LEN;i++)	used[i] = 0;
-				}
-				ra = (ra+1)%WORDS_LEN;
-				cnt++;
-			}
-			used[ra] = 1;
-			sprintf(bstr, "6 %d \n", ra); 
-			myWrite_nonblock(bluetooth_fd, bstr, 10);
-			
-		}
-		fb_draw_text(TEXTFRAME_X+2, pen_y, "U draw: ", 24, COLOR_TEXT);
-		fb_draw_text(TEXTFRAME_X+2+8*11, pen_y, words[ra], 24, PURPLE);
-		fb_update();
-		
-	}else if(role == GUESSER){
-		fb_draw_text(TEXTFRAME_X+2, pen_y, "U: guesser. Score: ", 24, COLOR_TEXT);
-		sprintf(str, "%d", score);
-		fb_draw_text(TEXTFRAME_X+2+20*11, pen_y, str, 24, ORANGE);
-		fb_update();
-		pen_y += 30;
-		fb_draw_text(TEXTFRAME_X+2, pen_y, "U guess and speak ans.", 24, COLOR_TEXT);
-		fb_update();
-		
-	}else if(role == BOTH){
-		fb_draw_text(TEXTFRAME_X+2, pen_y, "Free mode. Score: ", 24, COLOR_TEXT);
-		sprintf(str, "%d", score);
-		fb_draw_text(TEXTFRAME_X+2+19*11, pen_y, str, 24, ORANGE);
-		fb_update();
-		pen_y += 30;
-		if(!guessing){
-			guessing = 1;
-			ra = rand()%WORDS_LEN;
-			while(used[ra])	ra = (ra+1)%WORDS_LEN;
-			used[ra] = 1;
-			sprintf(bstr, "6 %d \n", ra); 
-			myWrite_nonblock(bluetooth_fd, bstr, 10);
-			
-		}
-		fb_draw_text(TEXTFRAME_X+2, pen_y, "U draw: ", 24, COLOR_TEXT);
-		fb_draw_text(TEXTFRAME_X+2+8*11, pen_y, words[ra], 24, PURPLE);
-		fb_update();
-	}else printf("invalid call: draw_textframe().\n");
-	pen_y+=30;
-	if(role != BOTH)
-		fb_draw_border(TEXTFRAME_X, TEXTFRAME_Y, TEXTFRAME_W, pen_y+10, CYAN);
-	else 
-		fb_draw_border(TEXTFRAME_X, TEXTFRAME_Y, TEXTFRAME_W, pen_y+30+10, CYAN);
-	fb_update();
-}
 
-*/
 static void draw_timer(){
 	if(timer < 0){
 		printf("timer error!\n");
@@ -308,25 +200,7 @@ static void draw_timer(){
 	fb_draw_image(TIMEBAR_X,TIMEBAR_Y,img,0);
 	fb_update();
 	fb_free_image(img);	
-	/*
-	if(role == BOTH){
-		fb_draw_text(TIME_X-90, TIME_Y+20, "无限时 ", 24, COLOR_TEXT);
-		fb_draw_text(TIME_X+2, TIME_Y+20, "999", 24, BLUE);
-		fb_update();
-		return;
-	}
-	*/
-	/*
-	fb_draw_text(TIME_X-90, TIME_Y+20, "倒计时:", 24, COLOR_TEXT);
-	if(timer > 60)
-		fb_draw_text(TIME_X+2, TIME_Y+20, buf, 24, BLUE);
-	else if(timer > 10)
-		fb_draw_text(TIME_X+2, TIME_Y+20, buf, 24, ORANGE);
-	else
-		fb_draw_text(TIME_X+2, TIME_Y+20, buf, 24, RED);
-	fb_update();
-	
-	*/
+
 	int color = CYAN;
 	if(timer < (TIME_INIT >> 1)){
 		color = YELLOW;
@@ -343,19 +217,6 @@ static void draw_timer(){
 
 	return;
 }
-
-/*
-static void clear_line3(){
-	fb_draw_rect(TEXTFRAME_X+2, pen_y+6-28, TEXTFRAME_W-4, 28, COLOR_BACKGROUND);
-	fb_update();
-}
-
-static void clear_line4(){
-	fb_draw_rect(TEXTFRAME_X+2, pen_y+30+6-28, TEXTFRAME_W-4, 28, COLOR_BACKGROUND);
-	fb_update();
-}
-
-*/
 
 
 static void update_score(){
@@ -411,6 +272,40 @@ static void draw_collection(){
 	fb_free_image(img);	
 }
 
+static void draw_image_topic(){
+	fb_draw_rect(IMAGE_TOPIC_X, IMAGE_TOPIC_Y - IMAGE_FONTSIZE - 6, IMAGE_TOPIC_X + WORDS_MAX_W, IMAGE_TOPIC_Y, COLOR_BACKGROUND);
+	fb_update();
+	char str[20];
+	for (int i = 0;;i++){
+		if(png_files[png_now][i] == NULL || png_files[png_now][i] == '.'){
+			fb_draw_text(IMAGE_TOPIC_X, IMAGE_TOPIC_Y, "未知", IMAGE_FONTSIZE, ORANGE);
+			fb_update();
+			return;
+		}
+		if(png_files[png_now][i] == '-'){
+			str[i] = '\0';
+			break;
+		}
+		str[i] = png_files[png_now][i];
+	}
+	int ira = -1;
+	sscanf(ira, "%d", &str);
+	if(ira < 0 || ira > WORDS_LEN){
+		fb_draw_text(IMAGE_TOPIC_X, IMAGE_TOPIC_Y, words[ira], IMAGE_FONTSIZE, ORANGE);
+		fb_update();
+		return;
+	}
+	fb_draw_text(IMAGE_TOPIC_X, IMAGE_TOPIC_Y, words[ira], IMAGE_FONTSIZE, ORANGE);
+	fb_update();
+}
+
+static draw_image_page(){
+	char str[12];
+	sprintf(str, "%d", png_now+1);
+	fb_draw_text(IMAGE_PAGEID_X, IMAGE_PAGEID_Y, str, IMAGE_FONTSIZE, ORANGE);
+	fb_update();
+}
+
 static void into_image_page(){
 	draw_background();
 	in_image_page = 1;
@@ -418,8 +313,25 @@ static void into_image_page(){
 	
 	open_png_files("./collections");
 	png_now = 0;
+	page_up = 0;
+	page_down = 0;
 	draw_collection();
+	draw_image_topic();
+	draw_image_page();
+}
 
+static void change_image_page(int delta){
+	if(delta == 0)
+		return;
+	draw_background();
+	draw_page("./pictures/collection.png");
+	open_png_files("./collections");
+	png_now = (png_now + delta + png_count) % png_count;
+	page_up = 0;
+	page_down = 0;
+	draw_collection();
+	draw_image_topic();
+	draw_image_page();
 }
 
 static void into_drawer_page(){
@@ -508,34 +420,7 @@ static void into_main_page(){
 	printf("The game is ready!\n");
 }
 
-/*
 
-static void draw_role1(){
-	if(role == DRAWER){
-		draw_background();	
-	}else{
-		fb_draw_rect(TEXTFRAME_X, TEXTFRAME_Y, TEXTFRAME_W, pen_y+30+10, COLOR_BACKGROUND);
-		fb_update();
-	}
-			
-	if(role == DRAWER)
-		draw_clear_button();
-	else if(role == BOTH)
-		draw_speak_button();
-	else printf("invalid call: draw_role1.\n");
-	draw_textframe();
-	draw_tools();
-	draw_usingtoolframe();
-	draw_timer();
-}
-
-static void draw_role2(){
-	draw_background();
-	draw_speak_button();
-	draw_textframe();
-	draw_timer();
-}
-*/
 static void into_next_turn(){
 	guessing = 0;
 	timer = TIME_INIT;
@@ -556,14 +441,7 @@ static void into_next_turn(){
 		myWrite_nonblock(bluetooth_fd, bstr, 5);
 		return;
 	}
-	/*
-						score++;
-					update_score();
-					guessing = 0;
-					role = NO_ROLE;
-					timer = TIME_INIT;
-					draw_role_buttons();
-	*/
+
 }
 
 static void bluetooth_tty_event_cb(int fd)
@@ -642,17 +520,7 @@ static void bluetooth_tty_event_cb(int fd)
 			sscanf(buf, "%d %s\n",&event_type, sword);
 			printf("speak word: %s\n", sword);
 			if(role == DRAWER || role == BOTH){
-				/*
-				clear_line3();
-				fb_draw_text(TEXTFRAME_X+2, pen_y, "OP Said: ", 24, COLOR_TEXT);
-				fb_draw_text(TEXTFRAME_X+2+9*11, pen_y, sword, 24, ORANGE);
-				fb_update();				
-				*/
 				if(strcmp(sword, words[ra])==0){
-					/*
-					fb_draw_text(TEXTFRAME_X+2+(9+strlen(sword))*11, pen_y, ",NICE!", 24, GREEN);
-					fb_update();					
-					*/
 					score++;
 					update_score();
 					draw_drawer_reply("./pictures/message-yes.png");
@@ -666,32 +534,7 @@ static void bluetooth_tty_event_cb(int fd)
 				}
 			}else printf("warning : you received a invalid message.(case 3)\n");
 			break;
-			/*
-			else if(role == BOTH){
-				clear_line3();
-				fb_draw_text(TEXTFRAME_X+2, pen_y, "OP Said: ", 24, COLOR_TEXT);
-				fb_draw_text(TEXTFRAME_X+2+9*11, pen_y, sword, 24, ORANGE);
-				fb_update();
-				
-				if(strcmp(sword, words[ra])==0){
-					fb_draw_text(TEXTFRAME_X+2+(9+strlen(sword))*11, pen_y, ",NICE!", 24, GREEN);
-					fb_update();
-					score++;
-					update_score();
-					guessing = 0;
-					draw_role1();
-					fb_draw_text(TEXTFRAME_X+2, pen_y, "OP Said: ", 24, COLOR_TEXT);
-					fb_draw_text(TEXTFRAME_X+2+9*11, pen_y, sword, 24, ORANGE);
-					fb_draw_text(TEXTFRAME_X+2+(9+strlen(sword))*11, pen_y, ",NICE!", 24, GREEN);
-					fb_update();
-					sprintf(bstr, "4 0 \n");
-					myWrite_nonblock(bluetooth_fd, bstr, 5);
-				}else{
-					sprintf(bstr, "4 1 \n");
-					myWrite_nonblock(bluetooth_fd, bstr, 5);
-				}
-			*/
-
+			
 		case 4:
 			//reply
 			//sscanf(buf, "%d", &type);
@@ -701,39 +544,11 @@ static void bluetooth_tty_event_cb(int fd)
 					update_score();
 					draw_guesser_reply("./pictures/message-yes.png");
 					into_next_turn();
-					/*
-						role = NO_ROLE;
-					clear_line3();
-					fb_draw_text(TEXTFRAME_X+2, pen_y, "Your answer is right!", 24, GREEN);
-					fb_update();
-					draw_role_buttons();
-					*/
 				}else{
 					draw_guesser_reply("./pictures/message-no.png");
-					//clear_line3();
-					//fb_draw_text(TEXTFRAME_X+2, pen_y, "Your answer is wrong!", 24, ORANGE);
-					//fb_update();
 				}
 			}else printf("warning : you received a invalid message.(case 4)\n");
 			break;
-			/*
-			else if(role == BOTH){
-				if(type == 0){
-					score++;
-					guessing = 0;
-					update_score();
-					//draw_textframe();
-					draw_role1();
-					clear_line4();
-					fb_draw_text(TEXTFRAME_X+2, pen_y+30, "Your answer is right!", 24, GREEN);
-					fb_update();
-				}else{
-					clear_line4();
-					fb_draw_text(TEXTFRAME_X+2, pen_y+30, "Your answer is wrong!", 24, ORANGE);
-					fb_update();
-				}
-			}
-			*/
 		case 5:
 			//change the op tool
 			if(role == DRAWER){
@@ -956,22 +771,62 @@ static void draw_save_reply(char *message){
 	fb_draw_text(SAVE_REPLY_X, SAVE_REPLY_Y, message, SAVE_REPLY_FONT, PURPLE);
 	fb_update();
 }
+
+
 static void touch_handle_image(int x, int y, int finger){
 	if(x >= EXIT_X && x < EXIT_X + TOOL_SIZE && y >= EXIT_Y && y < EXIT_Y + TOOL_SIZE){
 		printf("Exit.\n");
 		into_main_page();
 		return;
 	}
+	old[finger].x = x;
+	old[finger].y = y;
+	page_up = 0;
+	page_down = 0;
 }
 
+static void move_handle_image(int x, int y, int finger){
+	//printf("TOUCH_MOVE：x=%d,y=%d,finger=%d\n",x,y,finger);
+	if(y < old[finger].y){
+		page_up = 1;
+		page_down = 0;
+	}
+	if(y > old[finger].y){
+		page_up = 0;
+		page_down = 1;
+	}
+	old[finger].x = x;
+	old[finger].y = y;
+}
 
 static void touch_event_cb(int fd)
 {
 	int type,x,y,finger;
 	type = touch_read(fd, &x,&y,&finger);
-	char bstr[132];
 	if(in_image_page){
-		touch_handle_image(x, y, finger);
+		switch(type){
+			case TOUCH_PRESS:
+				touch_handle_image(x, y, finger);
+				break;
+			case TOUCH_MOVE:
+				move_handle_image(x, y, finger)
+				break;
+			case TOUCH_RELEASE:
+				//printf("TOUCH_RELEASE：x=%d,y=%d,finger=%d\n",x,y,finger);
+				if(page_up){
+					change_image_page(1);
+				}else if(page_down){
+					change_image_page(-1);
+				}
+				break;
+			case TOUCH_ERROR:
+				printf("close touch fd\n");
+				task_delete_file(fd);
+				close(fd);
+				break;
+			default:
+				return;
+		}
 		return;
 	}
 	if(role == NO_ROLE){

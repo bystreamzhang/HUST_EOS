@@ -51,6 +51,8 @@ static char * send_to_vosk_server(char *file);
 #define BOARD_Y1 112
 #define BOARD_X2 946
 #define BOARD_Y2 463
+#define BOARD_W 858
+#define BOARD_H 351
 
 #define CLOCK_X 748
 #define CLOCK_Y 12
@@ -192,15 +194,14 @@ static int bluetooth_tty_init(const char *dev);
 
 /*============================IMAGE Page============================*/
 
-#define IMAGE1_X1 83
-#define IMAGE1_Y1 70
-#define IMAGE1_X2 472
-#define IMAGE1_Y2 554
+#define IMAGE_X 104
+#define IMAGE_Y 86
 
-#define IMAGE2_X1 556
-#define IMAGE2_Y1 70
-#define IMAGE2_X2 956
-#define IMAGE2_Y2 554
+#define IMAGE_TOPIC_X 216
+#define IMAGE_TOPIC_Y 512
+#define IMAGE_FONTSIZE 40
+#define IMAGE_PAGEID_X 12
+#define IMAGE_PAGEID_Y 15
 
 static void write_png_file(const char *filename, int width, int height, unsigned char *image_data);
 
@@ -209,3 +210,9 @@ static void capture_screen_region(int x, int y, int w, int h);
 static void open_png_files(const char *folder_path);
 
 static void draw_collection();
+
+static void draw_image_topic();
+
+static draw_image_page();
+
+static void change_image_page(int delta);
