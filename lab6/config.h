@@ -197,10 +197,10 @@ static int bluetooth_tty_init(const char *dev);
 #define IMAGE_X 104
 #define IMAGE_Y 86
 
-#define IMAGE_TOPIC_X 216
+#define IMAGE_TOPIC_X 218
 #define IMAGE_TOPIC_Y 512
 #define IMAGE_FONTSIZE 40
-#define IMAGE_PAGEID_X 12
+#define IMAGE_PAGEID_X 18
 #define IMAGE_PAGEID_Y 58
 
 static void write_png_file(const char *filename, int width, int height, unsigned char *image_data);

@@ -273,7 +273,7 @@ static void draw_collection(){
 }
 
 static void draw_image_topic(){
-	fb_draw_rect(IMAGE_TOPIC_X, IMAGE_TOPIC_Y - IMAGE_FONTSIZE - 6, IMAGE_TOPIC_X + WORDS_MAX_W, IMAGE_TOPIC_Y, COLOR_BACKGROUND);
+	fb_draw_rect(IMAGE_TOPIC_X, IMAGE_TOPIC_Y - IMAGE_FONTSIZE - 6, WORDS_MAX_W, IMAGE_FONTSIZE+6, COLOR_BACKGROUND);
 	fb_update();
 	char str[20];
 	for (int i = 0;;i++){
