@@ -1120,22 +1120,35 @@ int main(int argc, char *argv[])
 
 	into_main_page();
 
-	printf("If your input device is not working, you may exit and enter ' ./final 0 ' if your event is event0, for example.\n(The default event is event1.)\n");
-	if(argv[0] == NULL || argv[0][0] == '1')
+	printf("If your input device is not working, you may exit and enter ' ./lab6 -e event0 ' if your event is event0, for example.\n(The default event is event1.)\n");
+	int s = 0, e = 0;
+	if(argv[0] != NULL){
+		if(argv[0][0] == '-'){
+			if(argv[0][1] == 'e' || argv[0][2] == 'e'){
+				e = 1;
+			}
+			if(argv[0][1] == 's' || argv[0][2] == 's'){
+				s = 1;
+			}
+		}
+	}
+	if(argv[1] == NULL)
 		touch_fd = touch_init("/dev/input/event1");
-	else 	if(argv[0][0] == '0')
-		touch_fd = touch_init("/dev/input/event0");
-	else 	if(argv[0][0] == '2')
-		touch_fd = touch_init("/dev/input/event2");
-	else
-		touch_fd = touch_init("/dev/input/event1");
-	
+	else{
+		char event[30];
+		sprintf(event, "/dev/input/%s", argv[1]);
+		touch_fd = touch_init(event);
+	}
 
+	printf("If you do not want to use bluetooth and just want to view the pictures, you may add -s.For example, enter './lab6 -es event0'\n(In this mode, you should only view the pictures.)\n");
 	task_add_file(touch_fd, touch_event_cb);
 	
-	bluetooth_fd = bluetooth_tty_init("/dev/rfcomm0");
-	if(bluetooth_fd == -1) return 0;
-	task_add_file(bluetooth_fd, bluetooth_tty_event_cb);
+	if(s == 0){
+		bluetooth_fd = bluetooth_tty_init("/dev/rfcomm0");
+
+		if(bluetooth_fd == -1) return 0;
+		task_add_file(bluetooth_fd, bluetooth_tty_event_cb);
+	}
 
 	task_add_timer(1000, timer_cb); /*增加1秒的定时器*/
 	task_loop();
