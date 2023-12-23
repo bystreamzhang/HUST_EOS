@@ -372,13 +372,6 @@ static void update_score(){
 }
 
 static void open_png_files(const char* folder_path){
-	/*
-	img = fb_read_png_image("./22-1703316101.png");
-	fb_draw_image(IMAGE1_X1,IMAGE1_Y1,img,0);
-	fb_update();
-	fb_free_image(img);	
-	*/
-
 	DIR *folder = opendir(folder_path);
 	if (folder == NULL) {
 			perror("Unable to read directory");
@@ -410,7 +403,9 @@ static void open_png_files(const char* folder_path){
 
 static void draw_collection(){
 	fb_image *img;
-	img = fb_read_png_image(png_files[png_now]);
+	char *img_path;
+	sprintf(img_path, "./collections/%s", png_files[png_now]);
+	img = fb_read_png_image(img_path);
 	fb_draw_image(IMAGE1_X1, IMAGE1_Y1, img, 0);
 	fb_update();
 	fb_free_image(img);	
