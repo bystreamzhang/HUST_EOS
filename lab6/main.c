@@ -428,17 +428,17 @@ static void into_next_turn(){
 	if((role == DRAWER)) {
 		role = GUESSER;
 		printf("you are guesser.\n");
-		sprintf(bstr, "0 1 \n");
+		//sprintf(bstr, "0 1 \n");
 		into_guesser_page();
-		myWrite_nonblock(bluetooth_fd, bstr, 5);
+		//myWrite_nonblock(bluetooth_fd, bstr, 5);
 		return;
 	}
 	if((role == GUESSER)) {
 		role = DRAWER;
 		printf("you are drawer.\n");
-		sprintf(bstr, "0 2 \n");
+		//sprintf(bstr, "0 2 \n");
 		into_drawer_page();
-		myWrite_nonblock(bluetooth_fd, bstr, 5);
+		//myWrite_nonblock(bluetooth_fd, bstr, 5);
 		return;
 	}
 
@@ -1062,3 +1062,4 @@ static char * send_to_vosk_server(char *file)
 	ret_buf[ret] = '\0';
 	return ret_buf;
 }
+
