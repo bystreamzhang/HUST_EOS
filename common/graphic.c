@@ -425,8 +425,8 @@ void fb_draw_image(int x, int y, fb_image *image, int color)
 		//printf("you need implement fb_draw_image() FB_COLOR_ALPHA_8\n"); exit(0);
 		src = image->content + iy*image->line_byte + ix; 
 		int src_pixel, dst_pixel;
-		for (int j = iy; j < h; j++) {
-			for (int i = 0; i < w-ix; i++) {
+		for (int j = 0; j < h; j++) {
+			for (int i = 0; i < w; i++) {
 				alpha = (*((int*)(src + i))) & 0xFF;
 				
 		    		//*(dst + i*4) = color & 0xFF;
