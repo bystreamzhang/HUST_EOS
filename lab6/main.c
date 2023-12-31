@@ -391,6 +391,7 @@ static void timer_cb(int period) /*该函数1秒执行一次*/
 			}else{
 				draw_drawer_reply("./pictures/message-timeout.png");
 			}
+			sleep(5);
 			into_next_turn();
 			return;
 		}
@@ -524,6 +525,7 @@ static void bluetooth_tty_event_cb(int fd)
 					score++;
 					update_score();
 					draw_drawer_reply("./pictures/message-yes.png");
+					sleep(5);
 					into_next_turn();
 					sprintf(bstr, "4 0 \n");
 					myWrite_nonblock(bluetooth_fd, bstr, 5);
@@ -543,6 +545,7 @@ static void bluetooth_tty_event_cb(int fd)
 					score++;
 					update_score();
 					draw_guesser_reply("./pictures/message-yes.png");
+					sleep(5);
 					into_next_turn();
 				}else{
 					draw_guesser_reply("./pictures/message-no.png");

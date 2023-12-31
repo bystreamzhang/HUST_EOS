@@ -178,15 +178,15 @@ void fb_draw_circle(int x, int y, int r, int color)
 				if(px>=0 && py>=0 && px<SCREEN_WIDTH && py<SCREEN_HEIGHT)
 					*(buf + py*SCREEN_WIDTH + px) = color;
 				py -= (dy<<1);
-		    		if(px>=0 && py>=0 && px<SCREEN_WIDTH && py<SCREEN_HEIGHT)
+		    if(px>=0 && py>=0 && px<SCREEN_WIDTH && py<SCREEN_HEIGHT)
 					*(buf + py*SCREEN_WIDTH + px) = color;
 				px -= (dx<<1);
 				if(px>=0 && py>=0 && px<SCREEN_WIDTH && py<SCREEN_HEIGHT)
 					*(buf + py*SCREEN_WIDTH + px) = color;
-		    		py += (dy<<1);
-		    		if(px>=0 && py>=0 && px<SCREEN_WIDTH && py<SCREEN_HEIGHT)
+		    py += (dy<<1);
+		    if(px>=0 && py>=0 && px<SCREEN_WIDTH && py<SCREEN_HEIGHT)
 					*(buf + py*SCREEN_WIDTH + px) = color;
-		    	}
+		    }
 		}
 	}
 }
